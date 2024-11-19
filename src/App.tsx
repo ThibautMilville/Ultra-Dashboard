@@ -36,7 +36,7 @@ function App() {
         setLoading(true);
         setError(null);
 
-        const priceResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+        const priceResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=ultra&vs_currencies=usd,eur&include_24hr_change=true', {
           params: {
             ids: 'ultra',
             vs_currencies: 'usd',
