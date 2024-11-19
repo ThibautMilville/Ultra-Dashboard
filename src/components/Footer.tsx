@@ -31,14 +31,14 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="https://docs.ultra.io" target="_blank" rel="noopener noreferrer" 
+                <a href="https://developers.ultra.io/" target="_blank" rel="noopener noreferrer" 
                    className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <Book className="h-4 w-4 mr-2" />
                   Docs
                 </a>
               </li>
               <li>
-                <a href="https://ultra.io/articles/whitepaper" target="_blank" rel="noopener noreferrer" 
+                <a href="https://api.website.ultra.io/uploads/newest_Ultra_Whitepaper_1_75_1_8ac4a4ccd3.pdf" target="_blank" rel="noopener noreferrer" 
                    className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <FileText className="h-4 w-4 mr-2" />
                   Whitepaper
@@ -51,7 +51,7 @@ const Footer: React.FC = () => {
             <h3 className="text-sm font-semibold text-gray-900 uppercase mb-4">Community</h3>
             <ul className="space-y-3">
               <li>
-                <a href="https://discord.com/invite/ultra" target="_blank" rel="noopener noreferrer" 
+                <a href="https://discord.gg/Pz5amVKF" target="_blank" rel="noopener noreferrer" 
                    className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Discord

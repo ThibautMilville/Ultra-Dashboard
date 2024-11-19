@@ -35,7 +35,7 @@ const Header: React.FC = () => {
                 Overview
               </a>
               <a 
-                href="https://docs.ultra.io" 
+                href="https://developers.ultra.io/" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 text-sm font-medium"
@@ -44,7 +44,7 @@ const Header: React.FC = () => {
                 Docs
               </a>
               <a 
-                href="https://discord.com/invite/ultra" 
+                href="https://discord.gg/Pz5amVKF" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="border-transparent text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 text-sm font-medium"
@@ -98,7 +98,7 @@ const Header: React.FC = () => {
             <span className="text-xs mt-1">Docs</span>
           </a>
           <a 
-            href="https://discord.com/invite/ultra" 
+            href="https://discord.gg/Pz5amVKF" 
             target="_blank" 
             rel="noopener noreferrer" 
             className="flex flex-col items-center justify-center p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-50"
