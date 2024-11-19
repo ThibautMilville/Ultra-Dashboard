@@ -3,11 +3,11 @@ import { Github, Twitter, MessageCircle, Globe, Book, FileText } from 'lucide-re
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-white border-t border-gray-200 mt-12">
+    <footer className="bg-white border-t border-gray-200 mt-12 pb-20 md:pb-0">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="col-span-1">
-            <div className="flex items-center mb-4">
+          <div className="col-span-1 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start mb-4">
               <img
                 src="https://assets.coingecko.com/coins/images/4480/small/Ultra.png"
                 alt="Ultra Logo"
@@ -16,42 +16,30 @@ const Footer: React.FC = () => {
               <span className="text-xl font-bold text-gray-900">Ultra</span>
             </div>
             <p className="text-gray-600 text-sm">
-              Ultra is revolutionizing the gaming industry with its blockchain-powered gaming platform, offering unique features for gamers, developers, and content creators.
+              Ultra is revolutionizing the gaming industry with its blockchain-powered gaming platform.
             </p>
           </div>
           
-          <div>
+          <div className="text-center md:text-left">
             <h3 className="text-sm font-semibold text-gray-900 uppercase mb-4">Resources</h3>
             <ul className="space-y-3">
               <li>
-                <a 
-                  href="https://ultra.io" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600 flex items-center"
-                >
+                <a href="https://ultra.io" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <Globe className="h-4 w-4 mr-2" />
-                  Official Website
+                  Website
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://docs.ultra.io" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600 flex items-center"
-                >
+                <a href="https://docs.ultra.io" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <Book className="h-4 w-4 mr-2" />
-                  Documentation
+                  Docs
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://ultra.io/articles/whitepaper" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600 flex items-center"
-                >
+                <a href="https://ultra.io/articles/whitepaper" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <FileText className="h-4 w-4 mr-2" />
                   Whitepaper
                 </a>
@@ -59,38 +47,26 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          <div>
+          <div className="text-center md:text-left">
             <h3 className="text-sm font-semibold text-gray-900 uppercase mb-4">Community</h3>
             <ul className="space-y-3">
               <li>
-                <a 
-                  href="https://discord.com/invite/ultra" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600 flex items-center"
-                >
+                <a href="https://discord.com/invite/ultra" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Discord
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://twitter.com/ultra_io" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600 flex items-center"
-                >
+                <a href="https://twitter.com/ultra_io" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <Twitter className="h-4 w-4 mr-2" />
                   Twitter
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://github.com/ultra-alliance" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600 flex items-center"
-                >
+                <a href="https://github.com/ultra-alliance" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <Github className="h-4 w-4 mr-2" />
                   GitHub
                 </a>
@@ -98,36 +74,24 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          <div>
+          <div className="text-center md:text-left">
             <h3 className="text-sm font-semibold text-gray-900 uppercase mb-4">Markets</h3>
             <ul className="space-y-3">
               <li>
-                <a 
-                  href="https://www.coingecko.com/en/coins/ultra" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600"
-                >
+                <a href="https://www.coingecko.com/en/coins/ultra" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600">
                   CoinGecko
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://coinmarketcap.com/currencies/ultra/" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600"
-                >
+                <a href="https://coinmarketcap.com/currencies/ultra/" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600">
                   CoinMarketCap
                 </a>
               </li>
               <li>
-                <a 
-                  href="https://www.binance.com/en/trade/UOS_USDT" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-primary-600"
-                >
+                <a href="https://www.binance.com/en/trade/UOS_USDT" target="_blank" rel="noopener noreferrer" 
+                   className="text-gray-600 hover:text-primary-600">
                   Binance
                 </a>
               </li>
@@ -136,25 +100,17 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-200">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-500 text-sm">
+          <div className="flex flex-col items-center md:flex-row md:justify-between">
+            <p className="text-gray-500 text-sm text-center md:text-left">
               © {new Date().getFullYear()} Ultra.io. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a 
-                href="https://ultra.io/privacy-policy" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-gray-500 hover:text-primary-600 text-sm"
-              >
+              <a href="https://ultra.io/privacy-policy" target="_blank" rel="noopener noreferrer" 
+                 className="text-gray-500 hover:text-primary-600 text-sm">
                 Privacy Policy
               </a>
-              <a 
-                href="https://ultra.io/terms" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-gray-500 hover:text-primary-600 text-sm"
-              >
+              <a href="https://ultra.io/terms" target="_blank" rel="noopener noreferrer" 
+                 className="text-gray-500 hover:text-primary-600 text-sm">
                 Terms of Service
               </a>
             </div>

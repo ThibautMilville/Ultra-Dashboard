@@ -33,14 +33,10 @@ function App() {
         setLoading(true);
         setError(null);
 
-        const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+        // Using server-side API call with API key
         const [priceResponse, rateResponse] = await Promise.all([
-          axios.get(
-            `${corsProxy}https://api.coingecko.com/api/v3/simple/price?ids=ultra&vs_currencies=usd,eur&include_24hr_change=true`
-          ),
-          axios.get(
-            `${corsProxy}https://api.exchangerate-api.com/v4/latest/USD`
-          ),
+          axios.get('/api/price'),
+          axios.get('/api/exchange-rate'),
         ]);
 
         if (!priceResponse.data?.ultra?.usd) {
@@ -99,7 +95,7 @@ function App() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center px-4">
           <p className="text-red-600 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -126,7 +122,7 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <ProjectDescription />
 
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div className="flex items-center gap-4">
               <img
                 src="https://assets.coingecko.com/coins/images/4480/small/Ultra.png"
@@ -134,19 +130,19 @@ function App() {
                 className="w-12 h-12"
               />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Ultra ($UOS)</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Ultra ($UOS)</h1>
                 <p className="text-gray-600 mt-1">
                   Real-time price and technical analysis
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <CurrencyToggle
                 currency={currency}
                 onCurrencyChange={setCurrency}
               />
-              <div className="text-right">
-                <p className="text-3xl font-bold text-gray-900">
+              <div className="text-left md:text-right">
+                <p className="text-2xl md:text-3xl font-bold text-gray-900">
                   {currencySymbol}
                   {currentPrice.toFixed(6)}
                 </p>
@@ -162,7 +158,7 @@ function App() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             <TechnicalIndicator
               title="RSI (14)"
               value={rsi}
@@ -192,8 +188,8 @@ function App() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm">
-              <div className="flex justify-between items-center mb-6">
+            <div className="lg:col-span-2 bg-white rounded-xl p-4 md:p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">
                   Price Chart
                 </h2>
