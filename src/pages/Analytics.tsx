@@ -4,12 +4,15 @@ import axios from 'axios';
 
 interface MarketData {
   market_cap: number;
+  market_cap_rank: number;
   total_volume: number;
   price_change_percentage_24h: number;
   price_change_percentage_7d: number;
   price_change_percentage_30d: number;
   total_supply: number;
   circulating_supply: number;
+  ath: number;
+  atl: number;
 }
 
 const Analytics: React.FC = () => {
@@ -30,15 +33,20 @@ const Analytics: React.FC = () => {
           }
         });
 
-        const data = response.data.market_data;
+        const data = response.data;
+        const marketData = data.market_data;
+        
         setMarketData({
-          market_cap: data.market_cap?.usd || 0,
-          total_volume: data.total_volume?.usd || 0,
-          price_change_percentage_24h: data.price_change_percentage_24h || 0,
-          price_change_percentage_7d: data.price_change_percentage_7d || 0,
-          price_change_percentage_30d: data.price_change_percentage_30d || 0,
-          total_supply: data.total_supply || 0,
-          circulating_supply: data.circulating_supply || 0
+          market_cap: marketData?.market_cap?.usd ?? 0,
+          total_volume: marketData?.total_volume?.usd ?? 0,
+          price_change_percentage_24h: marketData?.price_change_percentage_24h ?? 0,
+          price_change_percentage_7d: marketData?.price_change_percentage_7d ?? 0,
+          price_change_percentage_30d: marketData?.price_change_percentage_30d ?? 0,
+          total_supply: marketData?.total_supply ?? 0,
+          circulating_supply: marketData?.circulating_supply ?? 0,
+          market_cap_rank: data?.market_cap_rank ?? 0,
+          ath: marketData?.ath?.usd ?? 0,
+          atl: marketData?.atl?.usd ?? 0
         });
       } catch (err) {
         setError('Failed to fetch market data');
@@ -190,7 +198,7 @@ const Analytics: React.FC = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Market Cap Rank</span>
-              <span className="font-medium text-gray-900">#-</span>
+              <span className="font-medium text-gray-900">{marketData?.market_cap_rank}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Volume/Market Cap</span>
@@ -200,11 +208,11 @@ const Analytics: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">All-Time High</span>
-              <span className="font-medium text-gray-900">$-</span>
+              <span className="font-medium text-gray-900">{marketData?.ath}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">All-Time Low</span>
-              <span className="font-medium text-gray-900">$-</span>
+              <span className="font-medium text-gray-900">{marketData?.atl}</span>
             </div>
           </div>
         </div>
