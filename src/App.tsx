@@ -11,6 +11,9 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import Analytics from './pages/Analytics';
 
+// Configure axios with the API key
+axios.defaults.headers.common['x-cg-demo-api-key'] = import.meta.env.VITE_COINGECKO_API_KEY;
+
 function App() {
   const [price, setPrice] = useState<number>(0);
   const [priceChange, setPriceChange] = useState<number>(0);
@@ -33,7 +36,14 @@ function App() {
         setLoading(true);
         setError(null);
 
-        const priceResponse = await axios.get('/api/price');
+        const priceResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+          params: {
+            ids: 'ultra',
+            vs_currencies: 'usd',
+            include_24h_change: true
+          }
+        });
+
         if (!priceResponse.data?.ultra?.usd) {
           throw new Error('Invalid price data received');
         }

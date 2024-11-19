@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart2, TrendingUp, ArrowUpDown, DollarSign, Activity } from 'lucide-react';
-import { createChart } from 'lightweight-charts';
 import axios from 'axios';
 
 interface MarketData {
@@ -16,14 +15,34 @@ interface MarketData {
 const Analytics: React.FC = () => {
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
-        const response = await axios.get('/api/market-data');
-        setMarketData(response.data);
-      } catch (error) {
-        console.error('Error fetching market data:', error);
+        const response = await axios.get('https://api.coingecko.com/api/v3/coins/ultra', {
+          params: {
+            localization: false,
+            tickers: false,
+            community_data: false,
+            developer_data: false,
+            sparkline: false
+          }
+        });
+
+        const data = response.data.market_data;
+        setMarketData({
+          market_cap: data.market_cap?.usd || 0,
+          total_volume: data.total_volume?.usd || 0,
+          price_change_percentage_24h: data.price_change_percentage_24h || 0,
+          price_change_percentage_7d: data.price_change_percentage_7d || 0,
+          price_change_percentage_30d: data.price_change_percentage_30d || 0,
+          total_supply: data.total_supply || 0,
+          circulating_supply: data.circulating_supply || 0
+        });
+      } catch (err) {
+        setError('Failed to fetch market data');
+        console.error('Error fetching market data:', err);
       } finally {
         setLoading(false);
       }
@@ -36,6 +55,22 @@ const Analytics: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -54,10 +89,10 @@ const Analytics: React.FC = () => {
             <DollarSign className="h-5 w-5 text-primary-600" />
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            ${marketData?.market_cap.toLocaleString()}
+            ${(marketData?.market_cap || 0).toLocaleString()}
           </p>
-          <p className={`text-sm ${marketData?.price_change_percentage_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {marketData?.price_change_percentage_24h.toFixed(2)}% (24h)
+          <p className={`text-sm ${(marketData?.price_change_percentage_24h || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {(marketData?.price_change_percentage_24h || 0).toFixed(2)}% (24h)
           </p>
         </div>
 
@@ -67,7 +102,7 @@ const Analytics: React.FC = () => {
             <Activity className="h-5 w-5 text-primary-600" />
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            ${marketData?.total_volume.toLocaleString()}
+            ${(marketData?.total_volume || 0).toLocaleString()}
           </p>
           <p className="text-sm text-gray-600">
             {((marketData?.total_volume || 0) / (marketData?.market_cap || 1) * 100).toFixed(2)}% of Market Cap
@@ -92,8 +127,8 @@ const Analytics: React.FC = () => {
             <h3 className="text-lg font-medium text-gray-900">Price Change</h3>
             <TrendingUp className="h-5 w-5 text-primary-600" />
           </div>
-          <p className={`text-2xl font-bold ${marketData?.price_change_percentage_7d >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {marketData?.price_change_percentage_7d.toFixed(2)}%
+          <p className={`text-2xl font-bold ${(marketData?.price_change_percentage_7d || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {(marketData?.price_change_percentage_7d || 0).toFixed(2)}%
           </p>
           <p className="text-sm text-gray-600">Last 7 days</p>
         </div>
@@ -105,20 +140,20 @@ const Analytics: React.FC = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">24h Change</span>
-              <span className={`font-medium ${marketData?.price_change_percentage_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {marketData?.price_change_percentage_24h.toFixed(2)}%
+              <span className={`font-medium ${(marketData?.price_change_percentage_24h || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {(marketData?.price_change_percentage_24h || 0).toFixed(2)}%
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">7d Change</span>
-              <span className={`font-medium ${marketData?.price_change_percentage_7d >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {marketData?.price_change_percentage_7d.toFixed(2)}%
+              <span className={`font-medium ${(marketData?.price_change_percentage_7d || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {(marketData?.price_change_percentage_7d || 0).toFixed(2)}%
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">30d Change</span>
-              <span className={`font-medium ${marketData?.price_change_percentage_30d >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {marketData?.price_change_percentage_30d.toFixed(2)}%
+              <span className={`font-medium ${(marketData?.price_change_percentage_30d || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {(marketData?.price_change_percentage_30d || 0).toFixed(2)}%
               </span>
             </div>
           </div>
@@ -130,13 +165,13 @@ const Analytics: React.FC = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Circulating Supply</span>
               <span className="font-medium text-gray-900">
-                {marketData?.circulating_supply.toLocaleString()} UOS
+                {(marketData?.circulating_supply || 0).toLocaleString()} UOS
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Total Supply</span>
               <span className="font-medium text-gray-900">
-                {marketData?.total_supply.toLocaleString()} UOS
+                {(marketData?.total_supply || 0).toLocaleString()} UOS
               </span>
             </div>
             <div className="flex justify-between items-center">
