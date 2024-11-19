@@ -8,23 +8,31 @@ import TimeframeSelector from './components/TimeframeSelector';
 import CurrencyToggle from './components/CurrencyToggle';
 import ProjectDescription from './components/ProjectDescription';
 import Footer from './components/Footer';
+import Header from './components/Header';
+import Analytics from './pages/Analytics';
 
 function App() {
   const [price, setPrice] = useState<number>(0);
   const [priceChange, setPriceChange] = useState<number>(0);
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<Array<{ time: number; value: number }>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [timeframe, setTimeframe] = useState<string>('1D');
   const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
   const [eurRate, setEurRate] = useState<number>(0.92);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<'overview' | 'analytics'>('overview');
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    setCurrentPage(path === '/analytics' ? 'analytics' : 'overview');
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         setError(null);
 
-        // Ajout du proxy CORS aux URLs
         const corsProxy = 'https://cors-anywhere.herokuapp.com/';
         const [priceResponse, rateResponse] = await Promise.all([
           axios.get(
@@ -35,9 +43,17 @@ function App() {
           ),
         ]);
 
-        setPrice(priceResponse.data.ultra.usd);
-        setPriceChange(priceResponse.data.ultra.usd_24h_change);
-        setEurRate(rateResponse.data.rates.EUR);
+        if (!priceResponse.data?.ultra?.usd) {
+          throw new Error('Invalid price data received');
+        }
+
+        const usdPrice = priceResponse.data.ultra.usd;
+        const priceChangeValue = priceResponse.data.ultra.usd_24h_change;
+        const eurRateValue = rateResponse.data.rates.EUR;
+
+        setPrice(usdPrice);
+        setPriceChange(priceChangeValue);
+        setEurRate(eurRateValue);
 
         const now = Math.floor(Date.now() / 1000);
         const timeframeInSeconds = {
@@ -48,22 +64,21 @@ function App() {
         }[timeframe];
 
         const dataPoints = 200;
-        const interval = timeframeInSeconds ? timeframeInSeconds : 1200 / dataPoints;
+        const interval = timeframeInSeconds ? timeframeInSeconds / dataPoints : 300;
+        
         const data = Array.from({ length: dataPoints }, (_, i) => {
           const time = now - (dataPoints - 1 - i) * interval;
           const volatility = 0.1;
           const trend = Math.sin(i / 20) * volatility;
-          const value = Number(
-            (priceResponse.data.ultra.usd * (1 + trend)).toFixed(6)
-          );
+          const value = Number((usdPrice * (1 + trend)).toFixed(6));
           return { time, value };
         }).sort((a, b) => a.time - b.time);
 
         setChartData(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to fetch data. Please try again later.');
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+        setError(errorMessage);
+      } finally {
         setLoading(false);
       }
     };
@@ -104,101 +119,106 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <ProjectDescription />
+      <Header />
+      {currentPage === 'analytics' ? (
+        <Analytics />
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <ProjectDescription />
 
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <img
-              src="https://assets.coingecko.com/coins/images/4480/small/Ultra.png"
-              alt="Ultra Logo"
-              className="w-12 h-12"
-            />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Ultra ($UOS)</h1>
-              <p className="text-gray-600 mt-1">
-                Real-time price and technical analysis
-              </p>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <img
+                src="https://assets.coingecko.com/coins/images/4480/small/Ultra.png"
+                alt="Ultra Logo"
+                className="w-12 h-12"
+              />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Ultra ($UOS)</h1>
+                <p className="text-gray-600 mt-1">
+                  Real-time price and technical analysis
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <CurrencyToggle
+                currency={currency}
+                onCurrencyChange={setCurrency}
+              />
+              <div className="text-right">
+                <p className="text-3xl font-bold text-gray-900">
+                  {currencySymbol}
+                  {currentPrice.toFixed(6)}
+                </p>
+                <p
+                  className={`text-sm font-medium ${
+                    priceChange >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {priceChange >= 0 ? '↑' : '↓'}{' '}
+                  {Math.abs(priceChange).toFixed(2)}%
+                </p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <CurrencyToggle
-              currency={currency}
-              onCurrencyChange={setCurrency}
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <TechnicalIndicator
+              title="RSI (14)"
+              value={rsi}
+              change={priceChange}
+              icon={<Activity className="h-5 w-5" />}
             />
-            <div className="text-right">
-              <p className="text-3xl font-bold text-gray-900">
-                {currencySymbol}
-                {currentPrice.toFixed(6)}
-              </p>
-              <p
-                className={`text-sm font-medium ${
-                  priceChange >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
-                {priceChange >= 0 ? '↑' : '↓'}{' '}
-                {Math.abs(priceChange).toFixed(2)}%
-              </p>
-            </div>
+            <TechnicalIndicator
+              title="MACD"
+              value={macd.toFixed(6)}
+              change={priceChange * 1.2}
+              icon={<TrendingUp className="h-5 w-5" />}
+            />
+            <TechnicalIndicator
+              title="Volume 24h"
+              value={`${currencySymbol}${(
+                currentPrice * 1234567
+              ).toLocaleString()}`}
+              change={priceChange * 0.8}
+              icon={<BarChart3 className="h-5 w-5" />}
+            />
+            <TechnicalIndicator
+              title="Volatility"
+              value={`${Math.abs(priceChange * 0.4).toFixed(2)}%`}
+              change={priceChange * 0.5}
+              icon={<ArrowUpDown className="h-5 w-5" />}
+            />
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <TechnicalIndicator
-            title="RSI (14)"
-            value={rsi}
-            change={priceChange}
-            icon={<Activity className="h-5 w-5" />}
-          />
-          <TechnicalIndicator
-            title="MACD"
-            value={macd.toFixed(6)}
-            change={priceChange * 1.2}
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-          <TechnicalIndicator
-            title="Volume 24h"
-            value={`${currencySymbol}${(
-              currentPrice * 1234567
-            ).toLocaleString()}`}
-            change={priceChange * 0.8}
-            icon={<BarChart3 className="h-5 w-5" />}
-          />
-          <TechnicalIndicator
-            title="Volatility"
-            value={`${Math.abs(priceChange * 0.4).toFixed(2)}%`}
-            change={priceChange * 0.5}
-            icon={<ArrowUpDown className="h-5 w-5" />}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Price Chart
-              </h2>
-              <TimeframeSelector
-                timeframe={timeframe}
-                onTimeframeChange={setTimeframe}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Price Chart
+                </h2>
+                <TimeframeSelector
+                  timeframe={timeframe}
+                  onTimeframeChange={setTimeframe}
+                />
+              </div>
+              <PriceChart
+                data={chartData}
+                currency={currency}
+                currencySymbol={currencySymbol}
               />
             </div>
-            <PriceChart
-              data={chartData}
-              currency={currency}
-              currencySymbol={currencySymbol}
-            />
-          </div>
-          <div className="lg:col-span-1">
-            <TechnicalAnalysis
-              rsi={rsi}
-              macd={macd}
-              price={currentPrice}
-              currency={currency}
-            />
+            <div className="lg:col-span-1">
+              <TechnicalAnalysis
+                rsi={rsi}
+                macd={macd}
+                price={currentPrice}
+                currency={currency}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <Footer />
     </div>
   );
