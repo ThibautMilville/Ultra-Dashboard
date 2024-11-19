@@ -33,23 +33,16 @@ function App() {
         setLoading(true);
         setError(null);
 
-        // Using server-side API call with API key
-        const [priceResponse, rateResponse] = await Promise.all([
-          axios.get('/api/price'),
-          axios.get('/api/exchange-rate'),
-        ]);
-
+        const priceResponse = await axios.get('/api/price');
         if (!priceResponse.data?.ultra?.usd) {
           throw new Error('Invalid price data received');
         }
 
         const usdPrice = priceResponse.data.ultra.usd;
         const priceChangeValue = priceResponse.data.ultra.usd_24h_change;
-        const eurRateValue = rateResponse.data.rates.EUR;
 
         setPrice(usdPrice);
         setPriceChange(priceChangeValue);
-        setEurRate(eurRateValue);
 
         const now = Math.floor(Date.now() / 1000);
         const timeframeInSeconds = {

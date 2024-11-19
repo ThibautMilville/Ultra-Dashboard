@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
 
+const API_KEY = process.env.VITE_COINGECKO_API_KEY || process.env.COINGECKO_API_KEY;
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -21,7 +23,7 @@ export default async function handler(
         interval: timeframe === '1H' ? 'minute' : 'hour'
       },
       headers: {
-        'x-cg-demo-api-key': process.env.COINGECKO_API_KEY
+        'x-cg-demo-api-key': API_KEY
       }
     });
 
