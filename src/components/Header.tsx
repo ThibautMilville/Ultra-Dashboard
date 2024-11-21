@@ -1,7 +1,11 @@
 import React from 'react';
-import { Home, BarChart2, Cpu, Coins } from 'lucide-react';
+import { Home, BarChart2, Cpu, Coins, Newspaper } from 'lucide-react';
+import LanguageSelector from './LanguageSelector';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Header: React.FC = () => {
+  const { t } = useLanguage();
+
   const isCurrentPath = (path: string) => {
     if (typeof window === 'undefined') return false;
     return window.location.pathname === path;
@@ -32,7 +36,7 @@ const Header: React.FC = () => {
                 }`}
               >
                 <Home className="h-4 w-4 mr-2" />
-                Overview
+                {t('overview')}
               </a>
               <a 
                 href="/blockchain" 
@@ -43,7 +47,7 @@ const Header: React.FC = () => {
                 }`}
               >
                 <Cpu className="h-4 w-4 mr-2" />
-                Blockchain
+                {t('blockchain')}
               </a>
               <a 
                 href="/tokenomics" 
@@ -54,7 +58,7 @@ const Header: React.FC = () => {
                 }`}
               >
                 <Coins className="h-4 w-4 mr-2" />
-                Tokenomics
+                {t('tokenomics')}
               </a>
               <a 
                 href="/analytics" 
@@ -65,11 +69,22 @@ const Header: React.FC = () => {
                 }`}
               >
                 <BarChart2 className="h-4 w-4 mr-2" />
-                Analytics
+                {t('analytics')}
               </a>
-              <button className="bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-700">
-                Connect Wallet
-              </button>
+              <a 
+                href="/news" 
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
+                  isCurrentPath('/news') 
+                    ? 'border-primary-500 text-primary-600' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Newspaper className="h-4 w-4 mr-2" />
+                {t('news')}
+              </a>
+              
+              {/* Desktop Language Selector */}
+              <LanguageSelector />
             </div>
           </div>
         </nav>
@@ -77,7 +92,7 @@ const Header: React.FC = () => {
 
       {/* Mobile Navigation - Always visible at bottom */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-        <div className="grid grid-cols-4 gap-1 p-2">
+        <div className="grid grid-cols-6 gap-1 p-2">
           <a 
             href="/" 
             className={`flex flex-col items-center justify-center p-2 transition-colors ${
@@ -87,10 +102,7 @@ const Header: React.FC = () => {
             }`}
           >
             <Home className="h-5 w-5" />
-            <span className="text-xs mt-1">Overview</span>
-            {isCurrentPath('/') && (
-              <div className="absolute top-0 left-1/2 w-8 h-0.5 bg-primary-600 transform -translate-x-1/2" />
-            )}
+            <span className="text-xs mt-1">{t('overview')}</span>
           </a>
           <a 
             href="/blockchain" 
@@ -101,10 +113,7 @@ const Header: React.FC = () => {
             }`}
           >
             <Cpu className="h-5 w-5" />
-            <span className="text-xs mt-1">Blockchain</span>
-            {isCurrentPath('/blockchain') && (
-              <div className="absolute top-0 left-1/2 w-8 h-0.5 bg-primary-600 transform -translate-x-1/2" />
-            )}
+            <span className="text-xs mt-1">{t('blockchain')}</span>
           </a>
           <a 
             href="/tokenomics" 
@@ -115,10 +124,7 @@ const Header: React.FC = () => {
             }`}
           >
             <Coins className="h-5 w-5" />
-            <span className="text-xs mt-1">Tokenomics</span>
-            {isCurrentPath('/tokenomics') && (
-              <div className="absolute top-0 left-1/2 w-8 h-0.5 bg-primary-600 transform -translate-x-1/2" />
-            )}
+            <span className="text-xs mt-1">{t('tokenomics')}</span>
           </a>
           <a 
             href="/analytics" 
@@ -129,11 +135,22 @@ const Header: React.FC = () => {
             }`}
           >
             <BarChart2 className="h-5 w-5" />
-            <span className="text-xs mt-1">Analytics</span>
-            {isCurrentPath('/analytics') && (
-              <div className="absolute top-0 left-1/2 w-8 h-0.5 bg-primary-600 transform -translate-x-1/2" />
-            )}
+            <span className="text-xs mt-1">{t('analytics')}</span>
           </a>
+          <a 
+            href="/news" 
+            className={`flex flex-col items-center justify-center p-2 transition-colors ${
+              isCurrentPath('/news') 
+                ? 'text-primary-600 bg-primary-50' 
+                : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
+            }`}
+          >
+            <Newspaper className="h-5 w-5" />
+            <span className="text-xs mt-1">{t('news')}</span>
+          </a>
+          
+          {/* Mobile Language Selector */}
+          <LanguageSelector isMobile />
         </div>
       </div>
     </>
