@@ -102,7 +102,7 @@ const Footer: React.FC = () => {
         <div className="mt-8 pt-8 border-t border-gray-200">
           <div className="flex flex-col items-center md:flex-row md:justify-between">
             <p className="text-gray-500 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} Ultra.io. All rights reserved.
+              © {new Date().getFullYear()} Ultra Times. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="https://ultra.io/privacy-policy" target="_blank" rel="noopener noreferrer" 
