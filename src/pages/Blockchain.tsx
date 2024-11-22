@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Cpu, Network, Lock } from 'lucide-react';
+import { Shield, Cpu, Network, Lock, Users, Server } from 'lucide-react';
 
 const BlockchainFeature: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
   <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -8,6 +8,22 @@ const BlockchainFeature: React.FC<{ icon: React.ReactNode; title: string; descri
       <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
     </div>
     <p className="text-gray-600">{description}</p>
+  </div>
+);
+
+const BlockProducer: React.FC<{ name: string; location: string; votes: string; status: 'active' | 'standby' }> = ({ name, location, votes, status }) => (
+  <div className="bg-white p-4 rounded-lg border border-gray-200">
+    <div className="flex items-center justify-between mb-2">
+      <h4 className="font-semibold text-gray-900">{name}</h4>
+      <span className={`px-2 py-1 text-xs rounded-full ${status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+        }`}>
+        {status === 'active' ? 'Active' : 'Standby'}
+      </span>
+    </div>
+    <div className="text-sm text-gray-600">
+      <p>Location: {location}</p>
+      <p>Votes: {votes}</p>
+    </div>
   </div>
 );
 
@@ -42,6 +58,63 @@ function Blockchain() {
           title="Advanced Consensus"
           description="Utilizes Delegated Proof of Stake (DPoS) for efficient and democratic network governance."
         />
+      </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-sm mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <Server className="h-6 w-6 text-primary-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Block Producers</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <BlockProducer
+            name="Ultra.io"
+            location="United States"
+            votes="15.2M UOS"
+            status="active"
+          />
+          <BlockProducer
+            name="EOS Nation"
+            location="Canada"
+            votes="12.8M UOS"
+            status="active"
+          />
+          <BlockProducer
+            name="Ubisoft"
+            location="France"
+            votes="11.5M UOS"
+            status="active"
+          />
+          <BlockProducer
+            name="Block Matrix"
+            location="United Kingdom"
+            votes="10.1M UOS"
+            status="active"
+          />
+          <BlockProducer
+            name="EOS Amsterdam"
+            location="Netherlands"
+            votes="9.8M UOS"
+            status="active"
+          />
+          <BlockProducer
+            name="EOS Asia"
+            location="Singapore"
+            votes="8.5M UOS"
+            status="standby"
+          />
+        </div>
+        <div className="bg-gray-50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="h-5 w-5 text-primary-600" />
+            <h3 className="font-semibold text-gray-900">Block Producer Requirements</h3>
+          </div>
+          <ul className="list-disc list-inside text-gray-600 space-y-2">
+            <li>Minimum 1.5% of total voting power</li>
+            <li>Technical infrastructure meeting Ultra's standards</li>
+            <li>Proven track record in blockchain operations</li>
+            <li>Compliance with Ultra's governance policies</li>
+          </ul>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl p-6 shadow-sm mb-12">
