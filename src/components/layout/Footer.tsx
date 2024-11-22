@@ -90,7 +90,7 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="https://www.binance.com/en/trade/UOS_USDT" target="_blank" rel="noopener noreferrer" 
+                <a href="https://www.binance.com/fr/price/ultra" target="_blank" rel="noopener noreferrer" 
                    className="text-gray-600 hover:text-primary-600">
                   Binance
                 </a>
