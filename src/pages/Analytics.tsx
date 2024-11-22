@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart2, TrendingUp, ArrowUpDown, DollarSign, Activity } from 'lucide-react';
+import { TrendingUp, ArrowUpDown, DollarSign, Activity } from 'lucide-react';
 import axios from 'axios';
 
 interface MarketData {
@@ -19,6 +19,7 @@ const Analytics: React.FC = () => {
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -32,7 +33,7 @@ const Analytics: React.FC = () => {
             sparkline: false
           },
           headers: {
-            'x-cg-demo-api-key': import.meta.env.VITE_COINGECKO_API_KEY
+            'x-cg-demo-api-key': API_KEY
           }
         });
 

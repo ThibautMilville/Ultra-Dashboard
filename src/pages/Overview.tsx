@@ -8,8 +8,6 @@ import TimeframeSelector from '../components/common/TimeframeSelector';
 import CurrencyToggle from '../components/common/CurrencyToggle';
 import ProjectDescription from '../components/pages/overview/ProjectDescription';
 
-axios.defaults.headers.common['x-cg-demo-api-key'] = import.meta.env.VITE_COINGECKO_API_KEY;
-
 function Overview() {
   const [price, setPrice] = useState<number>(0);
   const [priceChange, setPriceChange] = useState<number>(0);
@@ -19,6 +17,7 @@ function Overview() {
   const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
   const [eurRate, setEurRate] = useState<number>(0.92);
   const [error, setError] = useState<string | null>(null);
+  const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,6 +30,9 @@ function Overview() {
             ids: 'ultra',
             vs_currencies: 'usd',
             include_24h_change: true
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY
           }
         });
 
@@ -54,7 +56,7 @@ function Overview() {
 
         const dataPoints = 200;
         const interval = timeframeInSeconds ? timeframeInSeconds / dataPoints : 300;
-        
+
         const data = Array.from({ length: dataPoints }, (_, i) => {
           const time = now - (dataPoints - 1 - i) * interval;
           const volatility = 0.1;
@@ -135,9 +137,8 @@ function Overview() {
               {currentPrice.toFixed(6)}
             </p>
             <p
-              className={`text-sm font-medium ${
-                priceChange >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
+              className={`text-sm font-medium ${priceChange >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}
             >
               {priceChange >= 0 ? '↑' : '↓'}{' '}
               {Math.abs(priceChange).toFixed(2)}%
