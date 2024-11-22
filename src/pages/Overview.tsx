@@ -84,34 +84,59 @@ function Overview() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-  
+
     abortControllerRef.current = new AbortController();
-  
+
     try {
-      const response = await axios.get('/api/market-chart-data', {
-        params: {
-          currency: currency.toLowerCase(),
-        },
-        signal: abortControllerRef.current.signal,
-      });
-  
-      const { fiveMin, hourly, daily } = response.data;
-  
-      const fiveMinPrices = fiveMin.prices.map((item: [number, number]) => ({
+      const [fiveMinResponse, hourlyResponse, dailyResponse] = await Promise.all([
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+          params: {
+            vs_currency: currency.toLowerCase(),
+            days: 1, // 5-minute granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
+          },
+          signal: abortControllerRef.current.signal,
+        }),
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+          params: {
+            vs_currency: currency.toLowerCase(),
+            days: 30, // Hourly granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
+          },
+          signal: abortControllerRef.current.signal,
+        }),
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+          params: {
+            vs_currency: currency.toLowerCase(),
+            days: 365, // Daily granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
+          },
+          signal: abortControllerRef.current.signal,
+        }),
+      ]);
+
+      // Process data
+      const fiveMinPrices = fiveMinResponse.data.prices.map((item: [number, number]) => ({
         time: item[0] / 1000,
         value: item[1],
       }));
-  
-      const hourlyPrices = hourly.prices.map((item: [number, number]) => ({
+
+      const hourlyPrices = hourlyResponse.data.prices.map((item: [number, number]) => ({
         time: item[0] / 1000,
         value: item[1],
       }));
-  
-      const dailyPrices = daily.prices.map((item: [number, number]) => ({
+
+      const dailyPrices = dailyResponse.data.prices.map((item: [number, number]) => ({
         time: item[0] / 1000,
         value: item[1],
       }));
-  
+
       setFiveMinData(fiveMinPrices);
       setHourlyData(hourlyPrices);
       setDailyData(dailyPrices);
@@ -122,7 +147,6 @@ function Overview() {
       }
     }
   };
-  
 
   const getFilteredData = (timeframe: string): PriceItem[] => {
     const now = Date.now();
