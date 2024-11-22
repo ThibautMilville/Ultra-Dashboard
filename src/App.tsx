@@ -6,10 +6,14 @@ import Blockchain from './pages/Blockchain';
 import Tokenomics from './pages/Tokenomics';
 import Analytics from './pages/Analytics';
 import News from './pages/News';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'overview' | 'blockchain' | 'tokenomics' | 'analytics' | 'news'>('overview');
+  const [currentPage, setCurrentPage] = useState<
+    'overview' | 'blockchain' | 'tokenomics' | 'analytics' | 'news' | 'privacy' | 'terms'
+  >('overview');
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -17,6 +21,8 @@ function App() {
     else if (path === '/tokenomics') setCurrentPage('tokenomics');
     else if (path === '/analytics') setCurrentPage('analytics');
     else if (path === '/news') setCurrentPage('news');
+    else if (path === '/privacy') setCurrentPage('privacy');
+    else if (path === '/terms') setCurrentPage('terms');
     else setCurrentPage('overview');
   }, []);
 
@@ -28,6 +34,8 @@ function App() {
          currentPage === 'tokenomics' ? <Tokenomics /> :
          currentPage === 'analytics' ? <Analytics /> :
          currentPage === 'news' ? <News /> :
+         currentPage === 'privacy' ? <PrivacyPolicy /> :
+         currentPage === 'terms' ? <TermsOfService /> :
          <Overview />}
         <Footer />
       </div>

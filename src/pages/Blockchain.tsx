@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Cpu, Network, Lock, Users, Server } from 'lucide-react';
+import { Shield, Cpu, Network, Lock, Users, Server, Handshake } from 'lucide-react';
 
 const BlockchainFeature: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
   <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -24,6 +24,19 @@ const BlockProducer: React.FC<{ name: string; location: string; votes: string; s
       <p>Location: {location}</p>
       <p>Votes: {votes}</p>
     </div>
+  </div>
+);
+
+const Partner: React.FC<{ name: string; logo: string; description: string; role: string }> = ({ name, logo, description, role }) => (
+  <div className="bg-white p-6 rounded-lg border border-gray-200">
+    <div className="flex items-center gap-4 mb-4">
+      <img src={logo} alt={name} className="w-16 h-16 object-contain" />
+      <div>
+        <h4 className="font-semibold text-gray-900">{name}</h4>
+        <span className="text-sm text-primary-600">{role}</span>
+      </div>
+    </div>
+    <p className="text-gray-600 text-sm">{description}</p>
   </div>
 );
 
@@ -58,6 +71,39 @@ function Blockchain() {
           title="Advanced Consensus"
           description="Utilizes Delegated Proof of Stake (DPoS) for efficient and democratic network governance."
         />
+      </div>
+
+      <div className="bg-white rounded-xl p-6 shadow-sm mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <Handshake className="h-6 w-6 text-primary-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Strategic Partners</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Partner
+            name="Ubisoft"
+            logo="https://upload.wikimedia.org/wikipedia/commons/7/78/Ubisoft_logo.svg"
+            role="Gaming Industry Partner & Block Producer"
+            description="Major gaming publisher partnering with Ultra to revolutionize game distribution and blockchain gaming. Serves as a key block producer and strategic advisor."
+          />
+          <Partner
+            name="AMD"
+            logo="https://upload.wikimedia.org/wikipedia/commons/7/7c/AMD_Logo.svg"
+            role="Technology Partner"
+            description="Strategic partnership to optimize Ultra's blockchain performance on AMD hardware and collaborate on gaming technology innovations."
+          />
+          <Partner
+            name="Atari"
+            logo="https://upload.wikimedia.org/wikipedia/commons/3/3e/Atari_logo.svg"
+            role="Gaming Pioneer Partner"
+            description="Iconic gaming company partnering with Ultra to bring classic games to blockchain and explore new gaming experiences."
+          />
+          <Partner
+            name="The Sandbox"
+            logo="https://upload.wikimedia.org/wikipedia/commons/9/9c/The_Sandbox_logo.png"
+            role="Metaverse Partner"
+            description="Collaboration to create interoperable gaming assets and experiences between Ultra and The Sandbox metaverse."
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-xl p-6 shadow-sm mb-12">

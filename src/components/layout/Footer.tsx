@@ -105,12 +105,10 @@ const Footer: React.FC = () => {
               © {new Date().getFullYear()} Ultra Times. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="https://ultra.io/privacy-policy" target="_blank" rel="noopener noreferrer" 
-                 className="text-gray-500 hover:text-primary-600 text-sm">
+              <a href="/privacy" className="text-gray-500 hover:text-primary-600 text-sm">
                 Privacy Policy
               </a>
-              <a href="https://ultra.io/terms" target="_blank" rel="noopener noreferrer" 
-                 className="text-gray-500 hover:text-primary-600 text-sm">
+              <a href="/terms" className="text-gray-500 hover:text-primary-600 text-sm">
                 Terms of Service
               </a>
             </div>
