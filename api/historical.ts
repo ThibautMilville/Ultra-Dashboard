@@ -8,6 +8,8 @@ export default async function handler(
   res: VercelResponse
 ) {
   const { timeframe } = req.query;
+  const currency = (req.query.currency as string)?.toLowerCase() || 'usd';
+  
   const days = {
     '1H': 1,
     '4H': 1,
@@ -19,10 +21,19 @@ export default async function handler(
 
   const interval = timeframe === '1Y' ? 'daily' : timeframe === '1M' ? 'hourly' : 'minutely';
 
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   try {
     const response = await axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
       params: {
-        vs_currency: 'usd',
+        vs_currency: currency,
         days: days,
         interval: interval
       },
@@ -30,15 +41,6 @@ export default async function handler(
         'x-cg-demo-api-key': API_KEY
       }
     });
-
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-      res.status(200).end();
-      return;
-    }
 
     res.status(200).json(response.data);
   } catch (error) {
