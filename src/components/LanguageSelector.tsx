@@ -13,8 +13,8 @@ interface LanguageSelectorProps {
 }
 
 const languages: Language[] = [
-  { code: 'en', name: 'English', flagPath: '/assets/flags/en.png' },
-  { code: 'fr', name: 'Français', flagPath: '/assets/flags/fr.png' }
+  { code: 'en', name: 'English', flagPath: 'src/assets/flags/en.png' },
+  { code: 'fr', name: 'Français', flagPath: 'src/assets/flags/fr.png' }
 ];
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ isMobile = false }) => {
