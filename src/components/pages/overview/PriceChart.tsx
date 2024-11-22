@@ -16,10 +16,14 @@ const PriceChart: React.FC<PriceChartProps> = ({ data, currency, currencySymbol 
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   useEffect(() => {
-    if (!chartContainerRef.current) return;
-
+    if (!chartContainerRef.current || data.length === 0) return;
+  
+    if (chartRef.current) {
+      chartRef.current.remove();
+      chartRef.current = null;
+    }
+  
     try {
-      // Create chart instance
       const chart = createChart(chartContainerRef.current, {
         layout: {
           background: { color: 'transparent' },
@@ -32,7 +36,6 @@ const PriceChart: React.FC<PriceChartProps> = ({ data, currency, currencySymbol 
         width: chartContainerRef.current.clientWidth,
         height: 400,
         rightPriceScale: {
-          precision: 6,
           borderVisible: false,
         },
         timeScale: {
@@ -54,41 +57,41 @@ const PriceChart: React.FC<PriceChartProps> = ({ data, currency, currencySymbol 
           },
         },
       });
-
+  
       chartRef.current = chart;
-
-      // Add price series
+  
       const lineSeries = chart.addLineSeries({
         color: '#6d28d9',
         lineWidth: 2,
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 4,
         priceFormat: {
-          type: 'price',
-          precision: 6,
-          minMove: 0.000001,
+          type: 'custom',
           formatter: (price: number) => `${currencySymbol}${price.toFixed(6)}`,
         },
       });
-
-      // Set data
-      lineSeries.setData(data.map(item => ({
-        ...item,
-        time: Math.floor(item.time),
-      })));
-
-      // Handle resize with ResizeObserver
+  
+      const sortedData = [...data].sort((a, b) => a.time - b.time);
+  
+      const formattedData = sortedData.map(item => ({
+        time: item.time, 
+        value: item.value,
+      }));
+  
+      lineSeries.setData(formattedData as any);
+  
+      chart.timeScale().fitContent();
+  
       const resizeObserver = new ResizeObserver(entries => {
         if (entries.length === 0 || !chartRef.current) return;
-        
+  
         const newWidth = entries[0].contentRect.width;
         chartRef.current.applyOptions({ width: newWidth });
       });
-
+  
       resizeObserver.observe(chartContainerRef.current);
       resizeObserverRef.current = resizeObserver;
-
-      // Cleanup function
+  
       return () => {
         resizeObserver.disconnect();
         if (chartRef.current) {
@@ -101,15 +104,18 @@ const PriceChart: React.FC<PriceChartProps> = ({ data, currency, currencySymbol 
       return undefined;
     }
   }, [data, currency, currencySymbol]);
+  
+  if (data.length === 0) {
+    return (
+      <div className="relative w-full h-[400px] flex items-center justify-center bg-white">
+        <div className="text-gray-500">Loading chart data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
       <div ref={chartContainerRef} className="w-full h-[400px]" />
-      {data.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75">
-          <p className="text-gray-500">No data available</p>
-        </div>
-      )}
     </div>
   );
 };

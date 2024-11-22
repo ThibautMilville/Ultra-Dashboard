@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { TrendingUp, ArrowUpDown, Activity, BarChart3 } from 'lucide-react';
 import PriceChart from '../components/pages/overview/PriceChart';
@@ -17,67 +17,102 @@ function Overview() {
   const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
   const [eurRate, setEurRate] = useState<number>(0.92);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
+
+  const fetchPriceData = async () => {
+    try {
+      const priceResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+        params: {
+          ids: 'ultra',
+          vs_currencies: 'usd,eur',
+          include_24hr_change: true
+        },
+        headers: {
+          'x-cg-demo-api-key': API_KEY
+        }
+      });
+
+      if (!priceResponse.data?.ultra?.usd) {
+        throw new Error('Invalid price data received');
+      }
+
+      const usdPrice = priceResponse.data.ultra.usd;
+      const priceChangeValue = priceResponse.data.ultra.usd_24h_change;
+      const eurRateValue = priceResponse.data.ultra.eur / usdPrice;
+
+      setPrice(usdPrice);
+      setPriceChange(priceChangeValue);
+      setEurRate(eurRateValue);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const fetchChartData = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const days = {
+        '1H': 1,
+        '4H': 1,
+        '1D': 1,
+        '1W': 7,
+      }[timeframe] || 1;
+
+      const response = await axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+        params: {
+          vs_currency: currency.toLowerCase(),
+          days: days,
+        },
+        headers: {
+          'x-cg-demo-api-key': API_KEY
+        },
+        signal: abortControllerRef.current.signal
+      });
+
+      const prices = response.data.prices.map((item: [number, number]) => ({
+        time: item[0] / 1000,
+        value: item[1]
+      }));
+
+      setChartData(prices);
+    } catch (err) {
+      if (!axios.isCancel(err)) {
+        setError('Failed to fetch chart data');
+        console.error('Error fetching chart data:', err);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        setLoading(true);
-        setError(null);
-
-        const priceResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=ultra&vs_currencies=usd,eur&include_24hr_change=true', {
-          params: {
-            ids: 'ultra',
-            vs_currencies: 'usd',
-            include_24h_change: true
-          },
-          headers: {
-            'x-cg-demo-api-key': API_KEY
-          }
-        });
-
-        if (!priceResponse.data?.ultra?.usd) {
-          throw new Error('Invalid price data received');
-        }
-
-        const usdPrice = priceResponse.data.ultra.usd;
-        const priceChangeValue = priceResponse.data.ultra.usd_24h_change;
-
-        setPrice(usdPrice);
-        setPriceChange(priceChangeValue);
-
-        const now = Math.floor(Date.now() / 1000);
-        const timeframeInSeconds = {
-          '1H': 60 * 60,
-          '4H': 4 * 60 * 60,
-          '1D': 24 * 60 * 60,
-          '1W': 7 * 24 * 60 * 60,
-        }[timeframe];
-
-        const dataPoints = 200;
-        const interval = timeframeInSeconds ? timeframeInSeconds / dataPoints : 300;
-
-        const data = Array.from({ length: dataPoints }, (_, i) => {
-          const time = now - (dataPoints - 1 - i) * interval;
-          const volatility = 0.1;
-          const trend = Math.sin(i / 20) * volatility;
-          const value = Number((usdPrice * (1 + trend)).toFixed(6));
-          return { time, value };
-        }).sort((a, b) => a.time - b.time);
-
-        setChartData(data);
+        await fetchPriceData();
+        await fetchChartData();
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-        setError(errorMessage);
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, [timeframe]);
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [currency, timeframe]);
 
   if (loading) {
     return (
