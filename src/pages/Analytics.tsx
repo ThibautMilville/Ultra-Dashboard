@@ -30,12 +30,18 @@ const Analytics: React.FC = () => {
             community_data: false,
             developer_data: false,
             sparkline: false
+          },
+          headers: {
+            'x-cg-demo-api-key': import.meta.env.VITE_COINGECKO_API_KEY
           }
         });
 
         const data = response.data;
+        if (!data || !data.market_data) {
+          throw new Error('Invalid data received from API');
+        }
+
         const marketData = data.market_data;
-        
         setMarketData({
           market_cap: marketData?.market_cap?.usd ?? 0,
           total_volume: marketData?.total_volume?.usd ?? 0,
@@ -49,8 +55,8 @@ const Analytics: React.FC = () => {
           atl: marketData?.atl?.usd ?? 0
         });
       } catch (err) {
-        setError('Failed to fetch market data');
-        console.error('Error fetching market data:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch market data';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -208,11 +214,11 @@ const Analytics: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">All-Time High</span>
-              <span className="font-medium text-gray-900">{marketData?.ath}</span>
+              <span className="font-medium text-gray-900">${marketData?.ath.toFixed(6)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">All-Time Low</span>
-              <span className="font-medium text-gray-900">{marketData?.atl}</span>
+              <span className="font-medium text-gray-900">${marketData?.atl.toFixed(6)}</span>
             </div>
           </div>
         </div>
