@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { TrendingUp, ArrowUpDown, Activity, BarChart3 } from 'lucide-react';
-import PriceChart from '../components/PriceChart';
-import TechnicalIndicator from '../components/TechnicalIndicator';
-import TechnicalAnalysis from '../components/TechnicalAnalysis';
-import TimeframeSelector from '../components/TimeframeSelector';
-import CurrencyToggle from '../components/CurrencyToggle';
-import ProjectDescription from '../components/ProjectDescription';
+import PriceChart from '../components/pages/overview/PriceChart';
+import TechnicalIndicator from '../components/pages/overview/TechnicalIndicator';
+import TechnicalAnalysis from '../components/pages/overview/TechnicalAnalysis';
+import TimeframeSelector from '../components/common/TimeframeSelector';
+import CurrencyToggle from '../components/common/CurrencyToggle';
+import ProjectDescription from '../components/pages/overview/ProjectDescription';
 
 axios.defaults.headers.common['x-cg-demo-api-key'] = import.meta.env.VITE_COINGECKO_API_KEY;
 

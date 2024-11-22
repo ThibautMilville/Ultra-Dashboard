@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, BarChart2, Cpu, Coins, Newspaper } from 'lucide-react';
-import LanguageSelector from './LanguageSelector';
-import { useLanguage } from '../contexts/LanguageContext';
+import LanguageSelector from '../common/LanguageSelector';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const Header: React.FC = () => {
   const { t } = useLanguage();
