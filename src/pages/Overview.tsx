@@ -8,17 +8,46 @@ import TimeframeSelector from '../components/common/TimeframeSelector';
 import CurrencyToggle from '../components/common/CurrencyToggle';
 import ProjectDescription from '../components/pages/overview/ProjectDescription';
 
+interface PriceItem {
+  time: number;
+  value: number;
+}
+
 function Overview() {
   const [price, setPrice] = useState<number>(0);
   const [priceChange, setPriceChange] = useState<number>(0);
-  const [chartData, setChartData] = useState<Array<{ time: number; value: number }>>([]);
+  const [fiveMinData, setFiveMinData] = useState<PriceItem[]>([]);
+  const [hourlyData, setHourlyData] = useState<PriceItem[]>([]);
+  const [dailyData, setDailyData] = useState<PriceItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [timeframe, setTimeframe] = useState<string>('1D');
+  const [timeframe, setTimeframe] = useState<'1Y' | '1M' | '1W' | '1D' | '4H' | '1H'>('1D');
   const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
   const [eurRate, setEurRate] = useState<number>(0.92);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        await Promise.all([fetchPriceData(), fetchAllChartData()]);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [currency]);
 
   const fetchPriceData = async () => {
     try {
@@ -51,7 +80,7 @@ function Overview() {
     }
   };
 
-  const fetchChartData = async () => {
+  const fetchAllChartData = async () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -59,30 +88,58 @@ function Overview() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const days = {
-        '1H': 1,
-        '4H': 1,
-        '1D': 1,
-        '1W': 7,
-      }[timeframe] || 1;
+      const [fiveMinResponse, hourlyResponse, dailyResponse] = await Promise.all([
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+          params: {
+            vs_currency: currency.toLowerCase(),
+            days: 1, // 5-minute granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
+          },
+          signal: abortControllerRef.current.signal,
+        }),
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+          params: {
+            vs_currency: currency.toLowerCase(),
+            days: 30, // Hourly granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
+          },
+          signal: abortControllerRef.current.signal,
+        }),
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+          params: {
+            vs_currency: currency.toLowerCase(),
+            days: 365, // Daily granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
+          },
+          signal: abortControllerRef.current.signal,
+        }),
+      ]);
 
-      const response = await axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
-        params: {
-          vs_currency: currency.toLowerCase(),
-          days: days,
-        },
-        headers: {
-          'x-cg-demo-api-key': API_KEY
-        },
-        signal: abortControllerRef.current.signal
-      });
-
-      const prices = response.data.prices.map((item: [number, number]) => ({
+      // Process data
+      const fiveMinPrices = fiveMinResponse.data.prices.map((item: [number, number]) => ({
         time: item[0] / 1000,
-        value: item[1]
+        value: item[1],
       }));
 
-      setChartData(prices);
+      const hourlyPrices = hourlyResponse.data.prices.map((item: [number, number]) => ({
+        time: item[0] / 1000,
+        value: item[1],
+      }));
+
+      const dailyPrices = dailyResponse.data.prices.map((item: [number, number]) => ({
+        time: item[0] / 1000,
+        value: item[1],
+      }));
+
+      setFiveMinData(fiveMinPrices);
+      setHourlyData(hourlyPrices);
+      setDailyData(dailyPrices);
     } catch (err) {
       if (!axios.isCancel(err)) {
         setError('Failed to fetch chart data');
@@ -91,28 +148,26 @@ function Overview() {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        await fetchPriceData();
-        await fetchChartData();
-      } catch (err) {
-        console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const getFilteredData = (timeframe: string): PriceItem[] => {
+    const now = Date.now();
 
-    fetchData();
+    switch (timeframe) {
+      case '1H':
+        return fiveMinData.filter(item => item.time * 1000 > now - 60 * 60 * 1000);
+      case '4H':
+        return fiveMinData.filter(item => item.time * 1000 > now - 4 * 60 * 60 * 1000);
+      case '1D':
+        return fiveMinData.filter(item => item.time * 1000 > now - 24 * 60 * 60 * 1000);
+      case '1W':
+        return hourlyData.filter(item => item.time * 1000 > now - 7 * 24 * 60 * 60 * 1000);
+      case '1M':
+        return hourlyData.filter(item => item.time * 1000 > now - 30 * 24 * 60 * 60 * 1000);
+      case '1Y':
+      default:
+        return dailyData;
+    }
+  };
 
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [currency, timeframe]);
 
   if (loading) {
     return (
@@ -223,7 +278,7 @@ function Overview() {
             />
           </div>
           <PriceChart
-            data={chartData}
+            data={getFilteredData(timeframe)}
             currency={currency}
             currencySymbol={currencySymbol}
           />
