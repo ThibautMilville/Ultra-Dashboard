@@ -25,6 +25,7 @@ function Overview() {
   const [eurRate, setEurRate] = useState<number>(0.92);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,7 +51,16 @@ function Overview() {
 
   const fetchPriceData = async () => {
     try {
-      const priceResponse = await axios.get('/api/price');
+      const priceResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+        params: {
+          ids: 'ultra',
+          vs_currencies: 'usd,eur',
+          include_24hr_change: true
+        },
+        headers: {
+          'x-cg-demo-api-key': API_KEY
+        }
+      });
 
       if (!priceResponse.data?.ultra?.usd) {
         throw new Error('Invalid price data received');
@@ -79,21 +89,33 @@ function Overview() {
 
     try {
       const [fiveMinResponse, hourlyResponse, dailyResponse] = await Promise.all([
-        axios.get(`/api/historical/1D`, {
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
           params: {
-            currency: currency.toLowerCase(),
+            vs_currency: currency.toLowerCase(),
+            days: 1, // 5-minute granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
           },
           signal: abortControllerRef.current.signal,
         }),
-        axios.get(`/api/historical/1M`, {
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
           params: {
-            currency: currency.toLowerCase(),
+            vs_currency: currency.toLowerCase(),
+            days: 30, // Hourly granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
           },
           signal: abortControllerRef.current.signal,
         }),
-        axios.get(`/api/historical/1Y`, {
+        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
           params: {
-            currency: currency.toLowerCase(),
+            vs_currency: currency.toLowerCase(),
+            days: 365, // Daily granularity
+          },
+          headers: {
+            'x-cg-demo-api-key': API_KEY,
           },
           signal: abortControllerRef.current.signal,
         }),
@@ -145,6 +167,7 @@ function Overview() {
         return dailyData;
     }
   };
+
 
   if (loading) {
     return (
