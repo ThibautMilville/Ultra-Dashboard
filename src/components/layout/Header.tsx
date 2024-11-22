@@ -2,12 +2,12 @@ import React from 'react';
 import { Home, BarChart2, Cpu, Coins, Newspaper } from 'lucide-react';
 import LanguageSelector from '../common/LanguageSelector';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useRouter } from '../../hooks/useRouter';
+import { useRouterStore } from '../../store/routerStore';
 import type { Route } from '../../store/routerStore';
 
 const Header: React.FC = () => {
   const { t } = useLanguage();
-  const { currentRoute, navigate } = useRouter();
+  const { currentRoute, navigate } = useRouterStore();
 
   const handleNavigation = (route: Route, e: React.MouseEvent) => {
     e.preventDefault();

@@ -4,7 +4,7 @@ export type Route = 'overview' | 'blockchain' | 'tokenomics' | 'analytics' | 'ne
 
 interface RouterState {
   currentRoute: Route;
-  setRoute: (route: Route) => void;
+  navigate: (route: Route) => void;
 }
 
 export const useRouterStore = create<RouterState>((set) => ({
@@ -20,5 +20,9 @@ export const useRouterStore = create<RouterState>((set) => ({
     if (path === '/terms') return 'terms';
     return 'overview';
   })(),
-  setRoute: (route) => set({ currentRoute: route }),
+  navigate: (route) => {
+    const path = route === 'overview' ? '/' : `/${route}`;
+    window.history.pushState({}, '', path);
+    set({ currentRoute: route });
+  }
 }));

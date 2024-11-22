@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -15,6 +15,23 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 
 function App() {
   const currentRoute = useRouterStore((state) => state.currentRoute);
+  const navigate = useRouterStore((state) => state.navigate);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/blockchain') navigate('blockchain');
+      else if (path === '/tokenomics') navigate('tokenomics');
+      else if (path === '/analytics') navigate('analytics');
+      else if (path === '/news') navigate('news');
+      else if (path === '/privacy') navigate('privacy');
+      else if (path === '/terms') navigate('terms');
+      else navigate('overview');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [navigate]);
 
   const renderPage = () => {
     switch (currentRoute) {
