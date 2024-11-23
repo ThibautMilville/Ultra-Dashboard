@@ -8,6 +8,7 @@ import TimeframeSelector from '../components/common/TimeframeSelector';
 import CurrencyToggle from '../components/common/CurrencyToggle';
 import ProjectDescription from '../components/pages/overview/ProjectDescription';
 import { useExchangeRate } from '../hooks/useExchangesRate';
+import { useDataStore, shouldFetchData } from '../store/dataStore';
 
 interface PriceItem {
   time: number;
@@ -15,13 +16,7 @@ interface PriceItem {
 }
 
 function Overview() {
-  // Use the exchange rate hook
   const { eurRate, loading: rateLoading, error: rateError } = useExchangeRate();
-  const [usdPrice, setUsdPrice] = useState<number>(0);
-  const [priceChange, setPriceChange] = useState<number>(0);
-  const [fiveMinData, setFiveMinData] = useState<PriceItem[]>([]);
-  const [hourlyData, setHourlyData] = useState<PriceItem[]>([]);
-  const [dailyData, setDailyData] = useState<PriceItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [timeframe, setTimeframe] = useState<'1Y' | '1M' | '1W' | '1D' | '4H' | '1H'>('1D');
   const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
@@ -29,13 +24,17 @@ function Overview() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
 
+  const { priceData, chartData, setPriceData, setChartData } = useDataStore();
+
   // Memoized price in current currency
   const currentPrice = useMemo(() => {
-    return currency === 'USD' ? usdPrice : usdPrice * eurRate;
-  }, [usdPrice, eurRate, currency]);
+    return currency === 'USD' ? priceData?.usdPrice || 0 : (priceData?.usdPrice || 0) * eurRate;
+  }, [priceData?.usdPrice, eurRate, currency]);
 
   // Memoized chart data in current currency
   const getCurrentChartData = useMemo(() => {
+    if (!chartData) return [];
+
     const now = Date.now();
     const multiplier = currency === 'EUR' ? eurRate : 1;
 
@@ -50,30 +49,39 @@ function Overview() {
 
     switch (timeframe) {
       case '1H':
-        return getFilteredData(fiveMinData, 60 * 60 * 1000);
+        return getFilteredData(chartData.fiveMinData, 60 * 60 * 1000);
       case '4H':
-        return getFilteredData(fiveMinData, 4 * 60 * 60 * 1000);
+        return getFilteredData(chartData.fiveMinData, 4 * 60 * 60 * 1000);
       case '1D':
-        return getFilteredData(fiveMinData, 24 * 60 * 60 * 1000);
+        return getFilteredData(chartData.fiveMinData, 24 * 60 * 60 * 1000);
       case '1W':
-        return getFilteredData(hourlyData, 7 * 24 * 60 * 60 * 1000);
+        return getFilteredData(chartData.hourlyData, 7 * 24 * 60 * 60 * 1000);
       case '1M':
-        return getFilteredData(hourlyData, 30 * 24 * 60 * 60 * 1000);
+        return getFilteredData(chartData.hourlyData, 30 * 24 * 60 * 60 * 1000);
       case '1Y':
       default:
-        return dailyData.map(item => ({
+        return chartData.dailyData.map(item => ({
           time: item.time,
           value: item.value * multiplier
         }));
     }
-  }, [timeframe, fiveMinData, hourlyData, dailyData, currency, eurRate]);
+  }, [timeframe, chartData, currency, eurRate]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
+
       try {
-        await Promise.all([fetchPriceData(), fetchAllChartData()]);
+        // Fetch price data if needed
+        if (!priceData || shouldFetchData(priceData.lastFetched)) {
+          await fetchPriceData();
+        }
+
+        // Fetch chart data if needed
+        if (!chartData || shouldFetchData(chartData.lastFetched)) {
+          await fetchAllChartData();
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
@@ -107,11 +115,11 @@ function Overview() {
         throw new Error('Invalid price data received');
       }
 
-      const usdPriceValue = priceResponse.data.ultra.usd;
-      const priceChangeValue = priceResponse.data.ultra.usd_24h_change;
-
-      setUsdPrice(usdPriceValue);
-      setPriceChange(priceChangeValue);
+      setPriceData({
+        usdPrice: priceResponse.data.ultra.usd,
+        priceChange: priceResponse.data.ultra.usd_24h_change,
+        lastFetched: Date.now()
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
@@ -175,9 +183,12 @@ function Overview() {
         value: item[1],
       }));
 
-      setFiveMinData(fiveMinPrices);
-      setHourlyData(hourlyPrices);
-      setDailyData(dailyPrices);
+      setChartData({
+        fiveMinData: fiveMinPrices,
+        hourlyData: hourlyPrices,
+        dailyData: dailyPrices,
+        lastFetched: Date.now()
+      });
     } catch (err) {
       if (!axios.isCancel(err)) {
         setError('Failed to fetch chart data');
@@ -211,7 +222,7 @@ function Overview() {
   }
 
   const currencySymbol = currency === 'USD' ? '$' : '€';
-  const rsi = Math.round(50 + priceChange * 2);
+  const rsi = Math.round(50 + (priceData?.priceChange || 0) * 2);
   const macd = currentPrice * 0.01;
 
   return (
@@ -243,11 +254,11 @@ function Overview() {
               {currentPrice.toFixed(6)}
             </p>
             <p
-              className={`text-sm font-medium ${priceChange >= 0 ? 'text-green-600' : 'text-red-600'
+              className={`text-sm font-medium ${(priceData?.priceChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}
             >
-              {priceChange >= 0 ? '↑' : '↓'}{' '}
-              {Math.abs(priceChange).toFixed(2)}%
+              {(priceData?.priceChange || 0) >= 0 ? '↑' : '↓'}{' '}
+              {Math.abs(priceData?.priceChange || 0).toFixed(2)}%
             </p>
           </div>
         </div>
@@ -257,13 +268,13 @@ function Overview() {
         <TechnicalIndicator
           title="RSI (14)"
           value={rsi}
-          change={priceChange}
+          change={priceData?.priceChange || 0}
           icon={<Activity className="h-5 w-5" />}
         />
         <TechnicalIndicator
           title="MACD"
           value={macd.toFixed(6)}
-          change={priceChange * 1.2}
+          change={(priceData?.priceChange || 0) * 1.2}
           icon={<TrendingUp className="h-5 w-5" />}
         />
         <TechnicalIndicator
@@ -271,13 +282,13 @@ function Overview() {
           value={`${currencySymbol}${(
             currentPrice * 1234567
           ).toLocaleString()}`}
-          change={priceChange * 0.8}
+          change={(priceData?.priceChange || 0) * 0.8}
           icon={<BarChart3 className="h-5 w-5" />}
         />
         <TechnicalIndicator
           title="Volatility"
-          value={`${Math.abs(priceChange * 0.4).toFixed(2)}%`}
-          change={priceChange * 0.5}
+          value={`${Math.abs((priceData?.priceChange || 0) * 0.4).toFixed(2)}%`}
+          change={(priceData?.priceChange || 0) * 0.5}
           icon={<ArrowUpDown className="h-5 w-5" />}
         />
       </div>
