@@ -37,7 +37,7 @@ A comprehensive analytics dashboard for tracking and analyzing the Ultra ($UOS) 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/ultra-dashboard.git
+git clone https://github.com/ThibautMilville/ultra-dashboard.git
 cd ultra-dashboard
 ```
 
