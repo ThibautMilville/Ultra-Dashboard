@@ -36,22 +36,14 @@ const News: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const API_KEY_ULTRA_TIMES = process.env.VITE_ULTRA_TIMES_API_KEY || process.env.ULTRA_TIMES_API_KEY;
   
   const fetchArticles = async () => {
     try {
-      const response = await axios.get<ApiResponse>(
-        'https://ultratimes.io/api/index.php/v1/content/articles',
-        {
-          headers: {
-            Authorization: 'Bearer ' + API_KEY_ULTRA_TIMES
-          },
-          params: {
-            'page[limit]': 9,
-            'page[offset]': (page - 1) * 9
-          }
+      const response = await axios.get<ApiResponse>('/api/news', {
+        params: {
+          page
         }
-      );
+      });
 
       if (page === 1) {
         setArticles(response.data.data);
