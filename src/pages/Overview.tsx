@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { TrendingUp, ArrowUpDown, Activity, BarChart3 } from 'lucide-react';
 import PriceChart from '../components/pages/overview/PriceChart';
@@ -7,6 +7,7 @@ import TechnicalAnalysis from '../components/pages/overview/TechnicalAnalysis';
 import TimeframeSelector from '../components/common/TimeframeSelector';
 import CurrencyToggle from '../components/common/CurrencyToggle';
 import ProjectDescription from '../components/pages/overview/ProjectDescription';
+import { useExchangeRate } from '../hooks/useExchangesRate';
 
 interface PriceItem {
   time: number;
@@ -14,7 +15,9 @@ interface PriceItem {
 }
 
 function Overview() {
-  const [price, setPrice] = useState<number>(0);
+  // Use the exchange rate hook
+  const { eurRate, loading: rateLoading, error: rateError } = useExchangeRate();
+  const [usdPrice, setUsdPrice] = useState<number>(0);
   const [priceChange, setPriceChange] = useState<number>(0);
   const [fiveMinData, setFiveMinData] = useState<PriceItem[]>([]);
   const [hourlyData, setHourlyData] = useState<PriceItem[]>([]);
@@ -22,10 +25,48 @@ function Overview() {
   const [loading, setLoading] = useState<boolean>(true);
   const [timeframe, setTimeframe] = useState<'1Y' | '1M' | '1W' | '1D' | '4H' | '1H'>('1D');
   const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
-  const [eurRate, setEurRate] = useState<number>(0.92);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
+
+  // Memoized price in current currency
+  const currentPrice = useMemo(() => {
+    return currency === 'USD' ? usdPrice : usdPrice * eurRate;
+  }, [usdPrice, eurRate, currency]);
+
+  // Memoized chart data in current currency
+  const getCurrentChartData = useMemo(() => {
+    const now = Date.now();
+    const multiplier = currency === 'EUR' ? eurRate : 1;
+
+    const getFilteredData = (data: PriceItem[], timeInMs: number) => {
+      return data
+        .filter(item => item.time * 1000 > now - timeInMs)
+        .map(item => ({
+          time: item.time,
+          value: item.value * multiplier
+        }));
+    };
+
+    switch (timeframe) {
+      case '1H':
+        return getFilteredData(fiveMinData, 60 * 60 * 1000);
+      case '4H':
+        return getFilteredData(fiveMinData, 4 * 60 * 60 * 1000);
+      case '1D':
+        return getFilteredData(fiveMinData, 24 * 60 * 60 * 1000);
+      case '1W':
+        return getFilteredData(hourlyData, 7 * 24 * 60 * 60 * 1000);
+      case '1M':
+        return getFilteredData(hourlyData, 30 * 24 * 60 * 60 * 1000);
+      case '1Y':
+      default:
+        return dailyData.map(item => ({
+          time: item.time,
+          value: item.value * multiplier
+        }));
+    }
+  }, [timeframe, fiveMinData, hourlyData, dailyData, currency, eurRate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,14 +88,14 @@ function Overview() {
         abortControllerRef.current.abort();
       }
     };
-  }, [currency]);
+  }, []);
 
   const fetchPriceData = async () => {
     try {
       const priceResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
         params: {
           ids: 'ultra',
-          vs_currencies: 'usd,eur',
+          vs_currencies: 'usd',
           include_24hr_change: true
         },
         headers: {
@@ -66,13 +107,11 @@ function Overview() {
         throw new Error('Invalid price data received');
       }
 
-      const usdPrice = priceResponse.data.ultra.usd;
+      const usdPriceValue = priceResponse.data.ultra.usd;
       const priceChangeValue = priceResponse.data.ultra.usd_24h_change;
-      const eurRateValue = priceResponse.data.ultra.eur / usdPrice;
 
-      setPrice(usdPrice);
+      setUsdPrice(usdPriceValue);
       setPriceChange(priceChangeValue);
-      setEurRate(eurRateValue);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
@@ -91,8 +130,8 @@ function Overview() {
       const [fiveMinResponse, hourlyResponse, dailyResponse] = await Promise.all([
         axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
           params: {
-            vs_currency: currency.toLowerCase(),
-            days: 1, // 5-minute granularity
+            vs_currency: 'usd',
+            days: 1,
           },
           headers: {
             'x-cg-demo-api-key': API_KEY,
@@ -101,8 +140,8 @@ function Overview() {
         }),
         axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
           params: {
-            vs_currency: currency.toLowerCase(),
-            days: 30, // Hourly granularity
+            vs_currency: 'usd',
+            days: 30,
           },
           headers: {
             'x-cg-demo-api-key': API_KEY,
@@ -111,8 +150,8 @@ function Overview() {
         }),
         axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
           params: {
-            vs_currency: currency.toLowerCase(),
-            days: 365, // Daily granularity
+            vs_currency: 'usd',
+            days: 365,
           },
           headers: {
             'x-cg-demo-api-key': API_KEY,
@@ -121,7 +160,6 @@ function Overview() {
         }),
       ]);
 
-      // Process data
       const fiveMinPrices = fiveMinResponse.data.prices.map((item: [number, number]) => ({
         time: item[0] / 1000,
         value: item[1],
@@ -148,28 +186,7 @@ function Overview() {
     }
   };
 
-  const getFilteredData = (timeframe: string): PriceItem[] => {
-    const now = Date.now();
-
-    switch (timeframe) {
-      case '1H':
-        return fiveMinData.filter(item => item.time * 1000 > now - 60 * 60 * 1000);
-      case '4H':
-        return fiveMinData.filter(item => item.time * 1000 > now - 4 * 60 * 60 * 1000);
-      case '1D':
-        return fiveMinData.filter(item => item.time * 1000 > now - 24 * 60 * 60 * 1000);
-      case '1W':
-        return hourlyData.filter(item => item.time * 1000 > now - 7 * 24 * 60 * 60 * 1000);
-      case '1M':
-        return hourlyData.filter(item => item.time * 1000 > now - 30 * 24 * 60 * 60 * 1000);
-      case '1Y':
-      default:
-        return dailyData;
-    }
-  };
-
-
-  if (loading) {
+  if (loading || rateLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -177,11 +194,11 @@ function Overview() {
     );
   }
 
-  if (error) {
+  if (error || rateError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center px-4">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="text-red-600 mb-4">{error || rateError}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
@@ -193,10 +210,9 @@ function Overview() {
     );
   }
 
-  const currentPrice = currency === 'USD' ? price : price * eurRate;
   const currencySymbol = currency === 'USD' ? '$' : '€';
   const rsi = Math.round(50 + priceChange * 2);
-  const macd = price * 0.01;
+  const macd = currentPrice * 0.01;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -278,7 +294,7 @@ function Overview() {
             />
           </div>
           <PriceChart
-            data={getFilteredData(timeframe)}
+            data={getCurrentChartData}
             currency={currency}
             currencySymbol={currencySymbol}
           />
