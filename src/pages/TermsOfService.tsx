@@ -63,7 +63,7 @@ function TermsOfService() {
 
         <div className="mt-8 p-4 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600">
-            For any questions about these Terms of Service, please contact us at support@ultradashboard.com
+            For any questions about these Terms of Service, please contact us at info@ultratimes.io
           </p>
         </div>
       </div>
