@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ArrowUpRight, Loader } from 'lucide-react';
+import { Loader } from 'lucide-react';
 import axios from 'axios';
-import { format } from 'date-fns';
+import ArticleCard from '../components/pages/news/ArticleCard';
+import LoadMoreButton from '../components/common/LoadMoreButton';
 
 interface Article {
   id: string;
@@ -14,20 +15,6 @@ interface Article {
     };
     text: string;
   };
-  relationships: {
-    category: {
-      data: {
-        id: string;
-      };
-    };
-  };
-}
-
-interface ApiResponse {
-  data: Article[];
-  links: {
-    next: string | null;
-  };
 }
 
 const News: React.FC = () => {
@@ -39,23 +26,31 @@ const News: React.FC = () => {
   
   const fetchArticles = async () => {
     try {
-      const response = await axios.get<ApiResponse>('/api/news', {
+      const response = await axios.get('https://ultratimes.io/api/index.php/v1/content/articles', {
         params: {
-          page
+          'page[limit]': 9,
+          'page[offset]': (Number(page) - 1) * 9
         }
       });
 
+      const newArticles = response.data?.data || [];
+      
       if (page === 1) {
-        setArticles(response.data.data);
+        setArticles(newArticles);
       } else {
-        setArticles(prev => [...prev, ...response.data.data]);
+        setArticles(prev => [...prev, ...newArticles]);
       }
 
-      setHasMore(!!response.data.links.next);
+      setHasMore(newArticles.length === 9);
+      if (newArticles.length === 0) {
+        setHasMore(false);
+      }
+
       setError(null);
     } catch (err) {
-      setError('Failed to load articles. Please try again later.');
       console.error('Error fetching articles:', err);
+      setError('Failed to load articles. Please try again later.');
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -64,13 +59,6 @@ const News: React.FC = () => {
   useEffect(() => {
     fetchArticles();
   }, [page]);
-
-  const getExcerpt = (text: string) => {
-    const div = document.createElement('div');
-    div.innerHTML = text;
-    const textContent = div.textContent || div.innerText;
-    return textContent.slice(0, 200) + '...';
-  };
 
   const handleReadMore = (alias: string) => {
     window.open(`https://ultratimes.io/${alias}`, '_blank');
@@ -111,59 +99,31 @@ const News: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {articles.map((article) => (
-              <div key={article.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="relative h-48">
-                  <img
-                    src={article.attributes.images.image_intro}
-                    alt={article.attributes.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute top-4 left-4 bg-primary-600 text-white px-3 py-1 rounded-full text-sm">
-                    Ultra Times
-                  </span>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center text-gray-500 text-sm mb-3">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {format(new Date(article.attributes.created), 'MMM dd, yyyy')}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {article.attributes.title}
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    {getExcerpt(article.attributes.text)}
-                  </p>
-                  <button
-                    onClick={() => handleReadMore(article.attributes.alias)}
-                    className="flex items-center text-primary-600 hover:text-primary-700"
-                  >
-                    Read more on Ultra Times
-                    <ArrowUpRight className="h-4 w-4 ml-1" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {hasMore && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => setPage(prev => prev + 1)}
-                className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="flex items-center">
-                    <Loader className="animate-spin h-4 w-4 mr-2" />
-                    Loading...
-                  </span>
-                ) : (
-                  'Load More Articles'
-                )}
-              </button>
+          {articles.length === 0 && !loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No articles found.</p>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {articles.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  title={article.attributes.title}
+                  created={article.attributes.created}
+                  imageUrl={article.attributes.images.image_intro}
+                  text={article.attributes.text}
+                  alias={article.attributes.alias}
+                  onReadMore={handleReadMore}
+                />
+              ))}
+            </div>
+          )}
+
+          {hasMore && !loading && articles.length > 0 && (
+            <LoadMoreButton
+              loading={loading}
+              onClick={() => setPage(prev => prev + 1)}
+            />
           )}
         </>
       )}
