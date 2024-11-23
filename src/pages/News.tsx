@@ -36,8 +36,8 @@ const News: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const API_KEY_ULTRA_TIMES = import.meta.env.VITE_API_KEY_ULTRA_TIMES;
-
+  const API_KEY_ULTRA_TIMES = process.env.VITE_ULTRA_TIMES_API_KEY || process.env.ULTRA_TIMES_API_KEY;
+  
   const fetchArticles = async () => {
     try {
       const response = await axios.get<ApiResponse>(
