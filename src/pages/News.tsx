@@ -3,6 +3,7 @@ import { Loader } from 'lucide-react';
 import axios from 'axios';
 import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Article {
   id: string;
@@ -23,13 +24,17 @@ const News: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const { language } = useLanguage();
   
   const fetchArticles = async () => {
     try {
+      const languageCode = language === 'fr' ? 'fr-FR' : 'en-GB';
       const response = await axios.get('/proxy', {
         params: {
           'page[limit]': 9,
-          'page[offset]': (Number(page) - 1) * 9
+          'page[offset]': (Number(page) - 1) * 9,
+          'filter[language]': languageCode,
+          'filter[state]': 1
         }
       });
 
@@ -55,6 +60,13 @@ const News: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setPage(1);
+    setArticles([]);
+    setLoading(true);
+    fetchArticles();
+  }, [language]);
 
   useEffect(() => {
     fetchArticles();

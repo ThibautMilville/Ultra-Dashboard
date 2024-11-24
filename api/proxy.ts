@@ -8,8 +8,7 @@ export default async function handler(
   res: VercelResponse
 ) {
   try {
-    // Get the limit and offset query parameters
-    const { 'page[limit]': limit, 'page[offset]': offset } = req.query;
+    const { 'page[limit]': limit, 'page[offset]': offset, 'filter[language]': language, 'filter[state]': state } = req.query;
 
     if (!limit || !offset) {
       return res.status(400).json({ error: 'Missing required parameters' });
@@ -22,6 +21,8 @@ export default async function handler(
       params: {
         'page[limit]': pageLimit,
         'page[offset]': pageOffset,
+        'filter[language]': language || 'en-GB',
+        'filter[state]': state || 1
       },
       headers: {
         'Content-Type': 'application/json',
