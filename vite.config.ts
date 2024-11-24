@@ -37,7 +37,7 @@ export default defineConfig({
       "/api-coins": {
         target: "https://api.coingecko.com/api/v3/coins/ultra",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api-market/, ''),
+        rewrite: (path) => path.replace(/^\/api-coins/, ''),
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
             const token = process.env.VITE_COINGECKO_API_KEY || import.meta.env.VITE_COINGECKO_API_KEY;
