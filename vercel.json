@@ -11,8 +11,8 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/proxy/:match*",
-      "destination": "https://ultratimes.io/api/index.php/v1/content/articles/:match*"
+      "source": "/proxy/:path*",
+      "destination": "/api/proxy"
     },
     {
       "source": "/(.*)",
