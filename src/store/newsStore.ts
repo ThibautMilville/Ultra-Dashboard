@@ -10,7 +10,7 @@ interface NewsState {
   error: string | null;
   page: number;
   updateCache: (language: string, articles: Article[], hasMore: boolean) => void;
-  appendToCache: (language: string, articles: Article[]) => void;
+  appendToCache: (language: string, articles: Article[], hasMore: boolean) => void;
   setLoading: (loading: boolean) => void;
   setLoadingMore: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -43,7 +43,7 @@ export const useNewsStore = create<NewsState>()(
           loading: false,
           loadingMore: false,
         })),
-      appendToCache: (language, newArticles) =>
+      appendToCache: (language, newArticles, hasMore) =>
         set((state) => {
           const existingArticles = state.cache[language]?.articles || [];
           const uniqueArticles = [...existingArticles];
@@ -59,7 +59,7 @@ export const useNewsStore = create<NewsState>()(
               ...state.cache,
               [language]: {
                 articles: uniqueArticles,
-                hasMore: newArticles.length === 9,
+                hasMore,
                 timestamp: Date.now(),
               },
             },
@@ -72,20 +72,12 @@ export const useNewsStore = create<NewsState>()(
       setError: (error) => set({ error }),
       setPage: (page) => set({ page }),
       setCurrentLanguage: (language) => 
-        set((state) => ({
+        set({
           currentLanguage: language,
           page: 1,
           loading: true,
           loadingMore: false,
-          cache: {
-            ...state.cache,
-            [language]: {
-              articles: [],
-              hasMore: true,
-              timestamp: 0
-            }
-          }
-        })),
+        }),
       clearCache: () => set({ 
         cache: {}, 
         page: 1,

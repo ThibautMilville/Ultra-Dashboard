@@ -47,10 +47,12 @@ const News: React.FC = () => {
       if (isNewFetch) {
         updateCache(currentLanguage, newArticles, newArticles.length === 9);
       } else {
-        appendToCache(currentLanguage, newArticles);
+        appendToCache(currentLanguage, newArticles, newArticles.length === 9);
+        setLoadingMore(false);
       }
 
       setError(null);
+      setLoading(false);
     } catch (err) {
       console.error('Error fetching articles:', err);
       setError('Failed to load articles. Please try again later.');
@@ -62,16 +64,18 @@ const News: React.FC = () => {
   useEffect(() => {
     if (language !== currentLanguage) {
       setCurrentLanguage(language);
+      setLoading(true);
+      setPage(1);
       fetchArticles(1, true);
     }
-  }, [language, currentLanguage, setCurrentLanguage, fetchArticles]);
+  }, [language, currentLanguage, setCurrentLanguage, fetchArticles, setLoading, setPage]);
 
   useEffect(() => {
-    if (page > 1 && hasMore && !loading && !loadingMore) {
+    if (page > 1 && hasMore && !loading) {
       setLoadingMore(true);
-      fetchArticles(page);
+      fetchArticles(page, false);
     }
-  }, [page, hasMore, loading, loadingMore, fetchArticles, setLoadingMore]);
+  }, [page, hasMore, loading, fetchArticles]);
 
   useEffect(() => {
     if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
@@ -86,6 +90,7 @@ const News: React.FC = () => {
 
   const handleRetry = () => {
     clearCache();
+    setLoading(true);
     fetchArticles(1, true);
   };
 
