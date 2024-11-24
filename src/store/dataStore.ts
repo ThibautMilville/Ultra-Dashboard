@@ -1,36 +1,6 @@
 import { create } from 'zustand';
-
-interface PriceData {
-  usdPrice: number;
-  priceChange: number;
-  lastFetched: number;
-}
-
-interface ChartData {
-  fiveMinData: PriceItem[];
-  hourlyData: PriceItem[];
-  dailyData: PriceItem[];
-  lastFetched: number;
-}
-
-interface MarketData {
-  market_cap: number;
-  total_volume: number;
-  price_change_percentage_24h: number;
-  price_change_percentage_7d: number;
-  price_change_percentage_30d: number;
-  total_supply: number;
-  circulating_supply: number;
-  market_cap_rank: number;
-  ath: number;
-  atl: number;
-  lastFetched: number;
-}
-
-interface PriceItem {
-  time: number;
-  value: number;
-}
+import { PriceData, MarketData } from '../types/price';
+import { ChartData } from '../types/chart';
 
 interface DataState {
   priceData: PriceData | null;

@@ -9,20 +9,17 @@ import CurrencyToggle from '../components/common/CurrencyToggle';
 import ProjectDescription from '../components/pages/overview/ProjectDescription';
 import { useExchangeRate } from '../hooks/useExchangesRate';
 import { useDataStore, shouldFetchData } from '../store/dataStore';
-
-interface PriceItem {
-  time: number;
-  value: number;
-}
+// Types
+import { PriceItem, TimeframeOption } from '../types/chart';
+import { Currency } from '../types/common';
 
 function Overview() {
   const { eurRate, loading: rateLoading, error: rateError } = useExchangeRate();
   const [loading, setLoading] = useState<boolean>(true);
-  const [timeframe, setTimeframe] = useState<'1Y' | '1M' | '1W' | '1D' | '4H' | '1H'>('1D');
-  const [currency, setCurrency] = useState<'USD' | 'EUR'>('USD');
+  const [timeframe, setTimeframe] = useState<TimeframeOption>('1D');
+  const [currency, setCurrency] = useState<Currency>('USD');
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
 
   const { priceData, chartData, setPriceData, setChartData } = useDataStore();
 
@@ -133,33 +130,27 @@ function Overview() {
 
     try {
       const [fiveMinResponse, hourlyResponse, dailyResponse] = await Promise.all([
-        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+        axios.get('/api-market-chart', {
           params: {
+            id: 'ultra',
             vs_currency: 'usd',
             days: 1,
           },
-          headers: {
-            'x-cg-demo-api-key': API_KEY,
-          },
           signal: abortControllerRef.current.signal,
         }),
-        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+        axios.get('/api-market-chart', {
           params: {
+            id: 'ultra',
             vs_currency: 'usd',
             days: 30,
           },
-          headers: {
-            'x-cg-demo-api-key': API_KEY,
-          },
           signal: abortControllerRef.current.signal,
         }),
-        axios.get(`https://api.coingecko.com/api/v3/coins/ultra/market_chart`, {
+        axios.get('/api-market-chart', {
           params: {
+            id: 'ultra',
             vs_currency: 'usd',
             days: 365,
-          },
-          headers: {
-            'x-cg-demo-api-key': API_KEY,
           },
           signal: abortControllerRef.current.signal,
         }),

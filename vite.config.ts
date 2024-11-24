@@ -47,10 +47,10 @@ export default defineConfig({
           });
         },
       },
-      "/api-historical": {
+      "/api-market-chart": {
         target: "https://api.coingecko.com/api/v3/coins/ultra/market_chart",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api-historical/, ''),
+        rewrite: (path) => path.replace(/^\/api-market-chart/, ''),
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
             const token = process.env.VITE_COINGECKO_API_KEY || import.meta.env.VITE_COINGECKO_API_KEY;

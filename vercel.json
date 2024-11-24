@@ -19,8 +19,8 @@
       "destination": "/api/coingecko-coins"
     },
     {
-      "source": "/api-historical/:path*",
-      "destination": "/api/historical"
+      "source": "/api-market-chart/:path*",
+      "destination": "/api/coingecko-market-chart"
     },
     {
       "source": "/(.*)",

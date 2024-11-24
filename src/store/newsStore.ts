@@ -1,26 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-interface Article {
-  id: string;
-  attributes: {
-    title: string;
-    alias: string;
-    created: string;
-    images: {
-      image_intro: string;
-    };
-    text: string;
-  };
-}
-
-interface CacheData {
-  [key: string]: {
-    articles: Article[];
-    hasMore: boolean;
-    timestamp: number;
-  };
-}
+import { Article, CacheData } from '../types/news';
 
 interface NewsState {
   cache: CacheData;
