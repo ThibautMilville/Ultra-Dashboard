@@ -19,7 +19,7 @@ interface NewsState {
   clearCache: () => void;
 }
 
-const CACHE_DURATION = 300000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const useNewsStore = create<NewsState>()(
   persist(
@@ -74,12 +74,12 @@ export const useNewsStore = create<NewsState>()(
       setError: (error) => set({ error }),
       setPage: (page) => set({ page }),
       setCurrentLanguage: (language) => 
-        set({
+        set((state) => ({
           currentLanguage: language,
           page: 1,
-          loading: true,
+          loading: !state.cache[language],
           loadingMore: false,
-        }),
+        })),
       clearCache: () => set({ 
         cache: {}, 
         page: 1,

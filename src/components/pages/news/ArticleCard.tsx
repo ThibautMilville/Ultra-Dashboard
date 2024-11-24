@@ -49,9 +49,14 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     return textContent.slice(0, 300) + '...';
   };
 
+  const handleClick = () => onReadMore(categoryId, alias);
+
   return (
     <div className="group bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px]">
-      <div className="relative h-52 overflow-hidden">
+      <div 
+        className="relative h-52 overflow-hidden cursor-pointer"
+        onClick={handleClick}
+      >
         <img
           src={imageSrc}
           alt={title}
@@ -68,14 +73,17 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <Calendar className="h-4 w-4 mr-2" />
           {format(new Date(created), 'MMM dd, yyyy')}
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2 min-h-[3.5rem] group-hover:text-primary-600 transition-colors duration-200">
+        <h3 
+          className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2 min-h-[3.5rem] group-hover:text-primary-600 transition-colors duration-200 cursor-pointer"
+          onClick={handleClick}
+        >
           {title}
         </h3>
         <p className="text-gray-600 mb-6 line-clamp-4 min-h-[6rem]">
           {getExcerpt(text)}
         </p>
         <button
-          onClick={() => onReadMore(categoryId, alias)}
+          onClick={handleClick}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className="relative inline-flex items-center justify-center w-full px-6 py-3.5 text-sm font-medium transition-all duration-200 bg-gray-50 hover:bg-primary-600/95 text-gray-900 hover:text-white rounded-lg overflow-hidden shadow-sm hover:shadow-md"

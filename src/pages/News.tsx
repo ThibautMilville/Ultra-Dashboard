@@ -9,6 +9,7 @@ import { useNewsStore, shouldFetchArticles } from '../store/newsStore';
 const News: React.FC = () => {
   const { language } = useLanguage();
   const initialFetchRef = useRef(false);
+  const loadingRef = useRef(false);
   const {
     cache,
     currentLanguage,
@@ -32,10 +33,18 @@ const News: React.FC = () => {
   const hasMore = currentCache?.hasMore ?? true;
 
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
-    if (loading && !isNewFetch) return;
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
+      
+      // Check cache for initial fetch
+      if (isNewFetch && currentCache && !shouldFetchArticles(currentCache.timestamp)) {
+        setLoading(false);
+        loadingRef.current = false;
+        return;
+      }
       
       // Fetch categories if it's a new fetch
       let currentCategories = categories;
@@ -54,47 +63,48 @@ const News: React.FC = () => {
       });
 
       const newArticles = response.data?.data || [];
+      const hasMoreArticles = newArticles.length === 9;
       
       if (isNewFetch) {
-        updateCache(currentLanguage, newArticles, currentCategories, newArticles.length === 9);
+        updateCache(currentLanguage, newArticles, currentCategories, hasMoreArticles);
       } else {
-        appendToCache(currentLanguage, newArticles, newArticles.length === 9);
-        setLoadingMore(false);
+        appendToCache(currentLanguage, newArticles, hasMoreArticles);
       }
 
       setError(null);
-      setLoading(false);
     } catch (err) {
       console.error('Error fetching articles:', err);
       setError('Failed to load articles. Please try again later.');
+    } finally {
       setLoading(false);
       setLoadingMore(false);
+      loadingRef.current = false;
     }
-  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore, loading]);
+  }, [currentLanguage, currentCache, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
 
   useEffect(() => {
     if (language !== currentLanguage) {
       setCurrentLanguage(language);
-      setLoading(true);
-      setPage(1);
       initialFetchRef.current = false;
     }
-  }, [language, currentLanguage, setCurrentLanguage, setLoading, setPage]);
+  }, [language, currentLanguage, setCurrentLanguage]);
 
   useEffect(() => {
-    if (!initialFetchRef.current && (!currentCache || shouldFetchArticles(currentCache.timestamp))) {
+    if (!initialFetchRef.current) {
       initialFetchRef.current = true;
-      setLoading(true);
-      fetchArticles(1, true);
+      if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
+        setLoading(true);
+        fetchArticles(1, true);
+      }
     }
   }, [currentCache, fetchArticles, setLoading]);
 
   useEffect(() => {
-    if (page > 1 && hasMore && !loading && !loadingMore) {
+    if (page > 1 && hasMore && !loadingRef.current) {
       setLoadingMore(true);
       fetchArticles(page, false);
     }
-  }, [page, hasMore, loading, loadingMore, fetchArticles]);
+  }, [page, hasMore, fetchArticles]);
 
   const getCategoryAlias = (categoryId: string): string => {
     const category = categories.find(cat => cat.id === categoryId);
@@ -103,12 +113,14 @@ const News: React.FC = () => {
 
   const handleReadMore = (categoryId: string, alias: string) => {
     const categoryAlias = getCategoryAlias(categoryId);
-    window.open(`https://ultratimes.io/${categoryAlias}/${alias}`, '_blank');
+    const langPrefix = currentLanguage === 'fr' ? '' : 'en/';
+    window.open(`https://ultratimes.io/${langPrefix}${categoryAlias}/${alias}`, '_blank');
   };
 
   const handleRetry = () => {
     clearCache();
     initialFetchRef.current = false;
+    loadingRef.current = false;
     setLoading(true);
     fetchArticles(1, true);
   };
@@ -138,7 +150,7 @@ const News: React.FC = () => {
         </p>
       </div>
 
-      {loading ? (
+      {loading && articles.length === 0 ? (
         <div className="flex justify-center items-center py-12">
           <Loader className="h-8 w-8 animate-spin text-primary-600" />
         </div>
