@@ -19,27 +19,27 @@ const Footer: React.FC = () => {
               Ultra is revolutionizing the gaming industry with its blockchain-powered gaming platform.
             </p>
           </div>
-          
+
           <div className="text-center md:text-left">
             <h3 className="text-sm font-semibold text-gray-900 uppercase mb-4">Resources</h3>
             <ul className="space-y-3">
               <li>
-                <a href="https://ultra.io" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
+                <a href="https://ultra.io" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <Globe className="h-4 w-4 mr-2" />
                   Website
                 </a>
               </li>
               <li>
-                <a href="https://developers.ultra.io/" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
+                <a href="https://developers.ultra.io/" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <Book className="h-4 w-4 mr-2" />
                   Docs
                 </a>
               </li>
               <li>
-                <a href="https://api.website.ultra.io/uploads/newest_Ultra_Whitepaper_1_75_1_8ac4a4ccd3.pdf" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
+                <a href="https://api.website.ultra.io/uploads/newest_Ultra_Whitepaper_1_75_1_8ac4a4ccd3.pdf" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <FileText className="h-4 w-4 mr-2" />
                   Whitepaper
                 </a>
@@ -51,24 +51,24 @@ const Footer: React.FC = () => {
             <h3 className="text-sm font-semibold text-gray-900 uppercase mb-4">Community</h3>
             <ul className="space-y-3">
               <li>
-                <a href="https://discord.gg/Pz5amVKF" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
+                <a href="https://t.me/ultra_io" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
+                  <Send className="h-4 w-4 mr-2" />
+                  Telegram
+                </a>
+              </li>
+              <li>
+                <a href="https://discord.gg/Pz5amVKF" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Discord
                 </a>
               </li>
               <li>
-                <a href="https://twitter.com/ultra_io" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
+                <a href="https://twitter.com/ultra_io" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
                   <Twitter className="h-4 w-4 mr-2" />
                   Twitter
-                </a>
-              </li>
-              <li>
-                <a href="https://t.me/ultra_io" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
-                  <Send className="h-4 w-4 mr-2" />
-                  Telegram
                 </a>
               </li>
             </ul>
@@ -78,20 +78,20 @@ const Footer: React.FC = () => {
             <h3 className="text-sm font-semibold text-gray-900 uppercase mb-4">Markets</h3>
             <ul className="space-y-3">
               <li>
-                <a href="https://www.coingecko.com/en/coins/ultra" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600">
+                <a href="https://www.coingecko.com/en/coins/ultra" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600">
                   CoinGecko
                 </a>
               </li>
               <li>
-                <a href="https://coinmarketcap.com/currencies/ultra/" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600">
+                <a href="https://coinmarketcap.com/currencies/ultra/" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600">
                   CoinMarketCap
                 </a>
               </li>
               <li>
-                <a href="https://www.binance.com/fr/price/ultra" target="_blank" rel="noopener noreferrer" 
-                   className="text-gray-600 hover:text-primary-600">
+                <a href="https://www.binance.com/fr/price/ultra" target="_blank" rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-primary-600">
                   Binance
                 </a>
               </li>
