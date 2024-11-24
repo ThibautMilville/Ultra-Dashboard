@@ -19,6 +19,7 @@ const Analytics: React.FC = () => {
       try {
         const response = await axios.get('/api-coins', {
           params: {
+            id: 'ultra',
             localization: false,
             tickers: false,
             community_data: false,
