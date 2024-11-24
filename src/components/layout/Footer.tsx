@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Twitter, MessageCircle, Globe, Book, FileText } from 'lucide-react';
+import { MessageCircle, Twitter, Globe, Book, FileText, Send } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -65,10 +65,10 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="https://github.com/ultra-alliance" target="_blank" rel="noopener noreferrer" 
+                <a href="https://t.me/ultra_io" target="_blank" rel="noopener noreferrer" 
                    className="text-gray-600 hover:text-primary-600 inline-flex items-center justify-center md:justify-start">
-                  <Github className="h-4 w-4 mr-2" />
-                  GitHub
+                  <Send className="h-4 w-4 mr-2" />
+                  Telegram
                 </a>
               </li>
             </ul>
