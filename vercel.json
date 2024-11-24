@@ -7,12 +7,12 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api-ultra-times-content/:path*",
-      "destination": "/api/ultra-times-content"
-    },
-    {
       "source": "/api-ultra-times-categories/:path*",
       "destination": "/api/ultra-times-categories"
+    },
+    {
+      "source": "/api-ultra-times-content/:path*",
+      "destination": "/api/ultra-times-content"
     },
     {
       "source": "/api-price/:path*",
