@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { Loader } from 'lucide-react';
 import axios from 'axios';
 import ArticleCard from '../components/pages/news/ArticleCard';
@@ -8,6 +8,7 @@ import { useNewsStore, shouldFetchArticles } from '../store/newsStore';
 
 const News: React.FC = () => {
   const { language } = useLanguage();
+  const initialFetchRef = useRef(false);
   const {
     cache,
     currentLanguage,
@@ -31,6 +32,8 @@ const News: React.FC = () => {
   const hasMore = currentCache?.hasMore ?? true;
 
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
+    if (loading && !isNewFetch) return;
+    
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
       
@@ -67,30 +70,31 @@ const News: React.FC = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
+  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore, loading]);
 
   useEffect(() => {
     if (language !== currentLanguage) {
       setCurrentLanguage(language);
       setLoading(true);
       setPage(1);
-      fetchArticles(1, true);
+      initialFetchRef.current = false;
     }
-  }, [language, currentLanguage, setCurrentLanguage, fetchArticles, setLoading, setPage]);
+  }, [language, currentLanguage, setCurrentLanguage, setLoading, setPage]);
 
   useEffect(() => {
-    if (page > 1 && hasMore && !loading) {
-      setLoadingMore(true);
-      fetchArticles(page, false);
-    }
-  }, [page, hasMore, loading, fetchArticles]);
-
-  useEffect(() => {
-    if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
+    if (!initialFetchRef.current && (!currentCache || shouldFetchArticles(currentCache.timestamp))) {
+      initialFetchRef.current = true;
       setLoading(true);
       fetchArticles(1, true);
     }
   }, [currentCache, fetchArticles, setLoading]);
+
+  useEffect(() => {
+    if (page > 1 && hasMore && !loading && !loadingMore) {
+      setLoadingMore(true);
+      fetchArticles(page, false);
+    }
+  }, [page, hasMore, loading, loadingMore, fetchArticles]);
 
   const getCategoryAlias = (categoryId: string): string => {
     const category = categories.find(cat => cat.id === categoryId);
@@ -104,6 +108,7 @@ const News: React.FC = () => {
 
   const handleRetry = () => {
     clearCache();
+    initialFetchRef.current = false;
     setLoading(true);
     fetchArticles(1, true);
   };
