@@ -6,7 +6,6 @@ import { useDataStore, shouldFetchData } from '../store/dataStore';
 const Analytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
   
   const { marketData, setMarketData } = useDataStore();
 
