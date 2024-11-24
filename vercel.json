@@ -6,7 +6,20 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/proxy/:match*",
+      "destination": "https://ultratimes.io/api/index.php/v1/content/articles/:match*",
+      "headers": {
+        "Authorization": "Bearer ${ULTRA_TIMES_API_KEY}"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

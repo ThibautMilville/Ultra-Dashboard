@@ -26,7 +26,7 @@ const News: React.FC = () => {
   
   const fetchArticles = async () => {
     try {
-      const response = await axios.get('https://ultratimes.io/api/index.php/v1/content/articles', {
+      const response = await axios.get('/proxy', {
         params: {
           'page[limit]': 9,
           'page[offset]': (Number(page) - 1) * 9
