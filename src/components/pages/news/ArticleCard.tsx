@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, ArrowUpRight } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -11,6 +11,8 @@ interface ArticleCardProps {
   onReadMore: (alias: string) => void;
 }
 
+const imageCache = new Map<string, string>();
+
 const ArticleCard: React.FC<ArticleCardProps> = ({
   title,
   created,
@@ -19,6 +21,24 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   alias,
   onReadMore,
 }) => {
+  const [imageSrc, setImageSrc] = useState<string>(() => imageCache.get(imageUrl) || imageUrl);
+
+  useEffect(() => {
+    if (!imageCache.has(imageUrl)) {
+      const img = new Image();
+      img.onload = () => {
+        imageCache.set(imageUrl, imageUrl);
+        setImageSrc(imageUrl);
+      };
+      img.onerror = () => {
+        const fallbackUrl = 'https://assets.coingecko.com/coins/images/4480/small/Ultra.png';
+        imageCache.set(imageUrl, fallbackUrl);
+        setImageSrc(fallbackUrl);
+      };
+      img.src = imageUrl;
+    }
+  }, [imageUrl]);
+
   const getExcerpt = (content: string) => {
     const div = document.createElement('div');
     div.innerHTML = content;
@@ -30,13 +50,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
       <div className="relative h-48">
         <img
-          src={imageUrl}
+          src={imageSrc}
           alt={title}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = 'https://assets.coingecko.com/coins/images/4480/small/Ultra.png';
-          }}
+          loading="lazy"
         />
         <span className="absolute top-4 left-4 bg-primary-600 text-white px-3 py-1 rounded-full text-sm">
           Ultra Times

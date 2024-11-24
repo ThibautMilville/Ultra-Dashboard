@@ -1,38 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Loader } from 'lucide-react';
 import axios from 'axios';
 import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
 import { useLanguage } from '../contexts/LanguageContext';
-
-interface Article {
-  id: string;
-  attributes: {
-    title: string;
-    alias: string;
-    created: string;
-    images: {
-      image_intro: string;
-    };
-    text: string;
-  };
-}
+import { useNewsStore, shouldFetchArticles } from '../store/newsStore';
 
 const News: React.FC = () => {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const { language } = useLanguage();
-  
-  const fetchArticles = async () => {
+  const {
+    cache,
+    currentLanguage,
+    loading,
+    error,
+    page,
+    updateCache,
+    appendToCache,
+    setLoading,
+    setError,
+    setPage,
+    setCurrentLanguage,
+  } = useNewsStore();
+
+  const currentCache = cache[currentLanguage];
+  const articles = currentCache?.articles || [];
+  const hasMore = currentCache?.hasMore ?? true;
+
+  const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
     try {
-      const languageCode = language === 'fr' ? 'fr-FR' : 'en-GB';
+      const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
       const response = await axios.get('/proxy', {
         params: {
           'page[limit]': 9,
-          'page[offset]': (Number(page) - 1) * 9,
+          'page[offset]': (pageNum - 1) * 9,
           'filter[language]': languageCode,
           'filter[state]': 1
         }
@@ -40,37 +40,46 @@ const News: React.FC = () => {
 
       const newArticles = response.data?.data || [];
       
-      if (page === 1) {
-        setArticles(newArticles);
+      if (isNewFetch) {
+        updateCache(currentLanguage, newArticles, newArticles.length === 9);
       } else {
-        setArticles(prev => [...prev, ...newArticles]);
-      }
-
-      setHasMore(newArticles.length === 9);
-      if (newArticles.length === 0) {
-        setHasMore(false);
+        appendToCache(currentLanguage, newArticles);
       }
 
       setError(null);
     } catch (err) {
       console.error('Error fetching articles:', err);
       setError('Failed to load articles. Please try again later.');
-      setHasMore(false);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentLanguage, updateCache, appendToCache, setError, setLoading]);
 
   useEffect(() => {
-    setPage(1);
-    setArticles([]);
-    setLoading(true);
-    fetchArticles();
-  }, [language]);
+    if (language !== currentLanguage) {
+      setCurrentLanguage(language);
+      const newCache = cache[language];
+      
+      if (!newCache || shouldFetchArticles(newCache.timestamp)) {
+        setLoading(true);
+        fetchArticles(1, true);
+      }
+    }
+  }, [language, currentLanguage, cache, fetchArticles, setCurrentLanguage, setLoading]);
 
   useEffect(() => {
-    fetchArticles();
-  }, [page]);
+    if (page > 1 && hasMore) {
+      setLoading(true);
+      fetchArticles(page);
+    }
+  }, [page, hasMore, fetchArticles]);
+
+  useEffect(() => {
+    if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
+      setLoading(true);
+      fetchArticles(1, true);
+    }
+  }, [currentCache, fetchArticles]);
 
   const handleReadMore = (alias: string) => {
     window.open(`https://ultratimes.io/${alias}`, '_blank');
@@ -85,7 +94,7 @@ const News: React.FC = () => {
             onClick={() => {
               setLoading(true);
               setPage(1);
-              fetchArticles();
+              fetchArticles(1, true);
             }}
             className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
           >
@@ -134,7 +143,7 @@ const News: React.FC = () => {
           {hasMore && !loading && articles.length > 0 && (
             <LoadMoreButton
               loading={loading}
-              onClick={() => setPage(prev => prev + 1)}
+              onClick={() => setPage(page + 1)}
             />
           )}
         </>
