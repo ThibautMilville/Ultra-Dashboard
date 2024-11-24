@@ -7,12 +7,20 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
       "source": "/api-ultra-times/:path*",
       "destination": "/api/ultra-times"
+    },
+    {
+      "source": "/api-price/:path*",
+      "destination": "/api/coingecko-price"
+    },
+    {
+      "source": "/api-historical/:path*",
+      "destination": "/api/historical"
+    },
+    {
+      "source": "/api-market/:path*",
+      "destination": "/api/market-data"
     },
     {
       "source": "/(.*)",

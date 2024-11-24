@@ -100,15 +100,12 @@ function Overview() {
 
   const fetchPriceData = async () => {
     try {
-      const priceResponse = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
+      const priceResponse = await axios.get('/api-price', {
         params: {
           ids: 'ultra',
           vs_currencies: 'usd',
           include_24hr_change: true
         },
-        headers: {
-          'x-cg-demo-api-key': API_KEY
-        }
       });
 
       if (!priceResponse.data?.ultra?.usd) {

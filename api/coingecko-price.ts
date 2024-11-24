@@ -9,11 +9,6 @@ export default async function handler(
 ) {
   try {
     const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
-      params: {
-        ids: 'ultra',
-        vs_currencies: 'usd,eur',
-        include_24hr_change: true
-      },
       headers: {
         'x-cg-demo-api-key': API_KEY
       }
