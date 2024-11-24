@@ -25,6 +25,7 @@ const News: React.FC = () => {
     setPage,
     setCurrentLanguage,
     clearCache,
+    resetState,
   } = useNewsStore();
 
   const currentCache = cache[currentLanguage];
@@ -37,16 +38,14 @@ const News: React.FC = () => {
     loadingRef.current = true;
     
     try {
-      const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
+      const languageCode = language === 'fr' ? 'fr-FR' : 'en-GB';
       
-      // Check cache for initial fetch
       if (isNewFetch && currentCache && !shouldFetchArticles(currentCache.timestamp)) {
         setLoading(false);
         loadingRef.current = false;
         return;
       }
       
-      // Fetch categories if it's a new fetch
       let currentCategories = categories;
       if (isNewFetch) {
         const categoriesResponse = await axios.get('/api-ultra-times-categories');
@@ -66,9 +65,9 @@ const News: React.FC = () => {
       const hasMoreArticles = newArticles.length === 9;
       
       if (isNewFetch) {
-        updateCache(currentLanguage, newArticles, currentCategories, hasMoreArticles);
+        updateCache(language, newArticles, currentCategories, hasMoreArticles);
       } else {
-        appendToCache(currentLanguage, newArticles, hasMoreArticles);
+        appendToCache(language, newArticles, hasMoreArticles);
       }
 
       setError(null);
@@ -80,25 +79,35 @@ const News: React.FC = () => {
       setLoadingMore(false);
       loadingRef.current = false;
     }
-  }, [currentLanguage, currentCache, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
+  }, [language, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore, currentCache]);
 
+  // Reset state when component unmounts
+  useEffect(() => {
+    return () => {
+      resetState();
+      initialFetchRef.current = false;
+    };
+  }, [resetState]);
+
+  // Handle language changes
   useEffect(() => {
     if (language !== currentLanguage) {
       setCurrentLanguage(language);
+      clearCache();
       initialFetchRef.current = false;
     }
-  }, [language, currentLanguage, setCurrentLanguage]);
+  }, [language, currentLanguage, setCurrentLanguage, clearCache]);
 
+  // Initial fetch
   useEffect(() => {
     if (!initialFetchRef.current) {
       initialFetchRef.current = true;
-      if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
-        setLoading(true);
-        fetchArticles(1, true);
-      }
+      setLoading(true);
+      fetchArticles(1, true);
     }
-  }, [currentCache, fetchArticles, setLoading]);
+  }, [language, fetchArticles, setLoading]);
 
+  // Handle pagination
   useEffect(() => {
     if (page > 1 && hasMore && !loadingRef.current) {
       setLoadingMore(true);

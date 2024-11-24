@@ -17,19 +17,24 @@ interface NewsState {
   setPage: (page: number) => void;
   setCurrentLanguage: (language: string) => void;
   clearCache: () => void;
+  resetState: () => void;
 }
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+const initialState = {
+  cache: {},
+  currentLanguage: 'en',
+  loading: false,
+  loadingMore: false,
+  error: null,
+  page: 1,
+};
+
 export const useNewsStore = create<NewsState>()(
   persist(
     (set) => ({
-      cache: {},
-      currentLanguage: 'en',
-      loading: false,
-      loadingMore: false,
-      error: null,
-      page: 1,
+      ...initialState,
       updateCache: (language, articles, categories, hasMore) =>
         set((state) => ({
           cache: {
@@ -74,18 +79,19 @@ export const useNewsStore = create<NewsState>()(
       setError: (error) => set({ error }),
       setPage: (page) => set({ page }),
       setCurrentLanguage: (language) => 
-        set((state) => ({
+        set({ 
           currentLanguage: language,
           page: 1,
-          loading: !state.cache[language],
+          loading: true,
           loadingMore: false,
-        })),
+        }),
       clearCache: () => set({ 
-        cache: {}, 
+        cache: {},
         page: 1,
         loading: true,
         loadingMore: false,
       }),
+      resetState: () => set(initialState),
     }),
     {
       name: 'news-cache',
