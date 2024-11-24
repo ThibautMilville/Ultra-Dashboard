@@ -1,33 +1,25 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import axios from 'axios';
 
-export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
-  const token = process.env.ULTRA_TIMES_API_KEY;
+const API_KEY = process.env.VITE_ULTRA_TIMES_API_KEY || process.env.ULTRA_TIMES_API_KEY;
 
-  // Add query parameters to the URL
-  const url = new URL('https://ultratimes.io/api/index.php/v1/content/articles');
-  Object.keys(req.query).forEach((key) => {
-    const value = req.query[key];
-    if (typeof value === 'string') {
-      url.searchParams.append(key, value);
-    } else if (Array.isArray(value)) {
-      value.forEach((v) => url.searchParams.append(key, v));
-    }
-  });
-
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
   try {
-    const response = await fetch(url.toString(), {
-      method: req.method,
+    const response = await axios.get('https://ultratimes.io/api/index.php/v1/content/articles', {
+      params: {
+        'page[limit]': 9,
+      },
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${API_KEY}`,
       },
-      body: req.method !== 'GET' && req.body ? JSON.stringify(req.body) : undefined,
     });
 
-    const data = await response.json();
-    res.status(response.status).json(data);
+    res.status(200).json(response.data);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(500).json({ error: 'Something went wrong', details: errorMessage });
+    res.status(500).json({ error: 'Failed to fetch price data' });
   }
 }
