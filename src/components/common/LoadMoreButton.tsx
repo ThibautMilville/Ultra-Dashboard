@@ -11,13 +11,15 @@ const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({ loading, onClick }) => 
     <div className="mt-8 text-center">
       <button
         onClick={onClick}
-        className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
         disabled={loading}
+        className={`px-6 py-2 bg-primary-600 text-white rounded-md transition-all duration-200 ${
+          loading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-primary-700'
+        }`}
       >
         {loading ? (
-          <span className="flex items-center">
+          <span className="flex items-center justify-center">
             <Loader className="animate-spin h-4 w-4 mr-2" />
-            Loading...
+            Loading more articles...
           </span>
         ) : (
           'Load More Articles'

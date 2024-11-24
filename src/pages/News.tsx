@@ -12,14 +12,17 @@ const News: React.FC = () => {
     cache,
     currentLanguage,
     loading,
+    loadingMore,
     error,
     page,
     updateCache,
     appendToCache,
     setLoading,
+    setLoadingMore,
     setError,
     setPage,
     setCurrentLanguage,
+    clearCache,
   } = useNewsStore();
 
   const currentCache = cache[currentLanguage];
@@ -29,6 +32,7 @@ const News: React.FC = () => {
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
+      
       const response = await axios.get('/api-ultra-times', {
         params: {
           'page[limit]': 9,
@@ -50,39 +54,39 @@ const News: React.FC = () => {
     } catch (err) {
       console.error('Error fetching articles:', err);
       setError('Failed to load articles. Please try again later.');
-    } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [currentLanguage, updateCache, appendToCache, setError, setLoading]);
+  }, [currentLanguage, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
 
   useEffect(() => {
     if (language !== currentLanguage) {
       setCurrentLanguage(language);
-      const newCache = cache[language];
-      
-      if (!newCache || shouldFetchArticles(newCache.timestamp)) {
-        setLoading(true);
-        fetchArticles(1, true);
-      }
+      fetchArticles(1, true);
     }
-  }, [language, currentLanguage, cache, fetchArticles, setCurrentLanguage, setLoading]);
+  }, [language, currentLanguage, setCurrentLanguage, fetchArticles]);
 
   useEffect(() => {
-    if (page > 1 && hasMore) {
-      setLoading(true);
+    if (page > 1 && hasMore && !loading && !loadingMore) {
+      setLoadingMore(true);
       fetchArticles(page);
     }
-  }, [page, hasMore, fetchArticles]);
+  }, [page, hasMore, loading, loadingMore, fetchArticles, setLoadingMore]);
 
   useEffect(() => {
     if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
       setLoading(true);
       fetchArticles(1, true);
     }
-  }, [currentCache, fetchArticles]);
+  }, [currentCache, fetchArticles, setLoading]);
 
   const handleReadMore = (alias: string) => {
     window.open(`https://ultratimes.io/${alias}`, '_blank');
+  };
+
+  const handleRetry = () => {
+    clearCache();
+    fetchArticles(1, true);
   };
 
   if (error) {
@@ -91,11 +95,7 @@ const News: React.FC = () => {
         <div className="text-center py-12">
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={() => {
-              setLoading(true);
-              setPage(1);
-              fetchArticles(1, true);
-            }}
+            onClick={handleRetry}
             className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
           >
             Try Again
@@ -114,13 +114,13 @@ const News: React.FC = () => {
         </p>
       </div>
 
-      {loading && articles.length === 0 ? (
+      {loading ? (
         <div className="flex justify-center items-center py-12">
           <Loader className="h-8 w-8 animate-spin text-primary-600" />
         </div>
       ) : (
         <>
-          {articles.length === 0 && !loading ? (
+          {articles.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600">No articles found.</p>
             </div>
@@ -142,7 +142,7 @@ const News: React.FC = () => {
 
           {hasMore && !loading && articles.length > 0 && (
             <LoadMoreButton
-              loading={loading}
+              loading={loadingMore}
               onClick={() => setPage(page + 1)}
             />
           )}

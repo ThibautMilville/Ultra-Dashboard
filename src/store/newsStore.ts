@@ -6,18 +6,20 @@ interface NewsState {
   cache: CacheData;
   currentLanguage: string;
   loading: boolean;
+  loadingMore: boolean;
   error: string | null;
   page: number;
   updateCache: (language: string, articles: Article[], hasMore: boolean) => void;
   appendToCache: (language: string, articles: Article[]) => void;
   setLoading: (loading: boolean) => void;
+  setLoadingMore: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setPage: (page: number) => void;
   setCurrentLanguage: (language: string) => void;
   clearCache: () => void;
 }
 
-const CACHE_DURATION = 300000; // 5 minutes cache
+const CACHE_DURATION = 300000; // 5 minutes
 
 export const useNewsStore = create<NewsState>()(
   persist(
@@ -25,6 +27,7 @@ export const useNewsStore = create<NewsState>()(
       cache: {},
       currentLanguage: 'en',
       loading: false,
+      loadingMore: false,
       error: null,
       page: 1,
       updateCache: (language, articles, hasMore) =>
@@ -37,23 +40,58 @@ export const useNewsStore = create<NewsState>()(
               timestamp: Date.now(),
             },
           },
+          loading: false,
+          loadingMore: false,
         })),
       appendToCache: (language, newArticles) =>
+        set((state) => {
+          const existingArticles = state.cache[language]?.articles || [];
+          const uniqueArticles = [...existingArticles];
+          
+          newArticles.forEach(article => {
+            if (!existingArticles.some(existing => existing.id === article.id)) {
+              uniqueArticles.push(article);
+            }
+          });
+          
+          return {
+            cache: {
+              ...state.cache,
+              [language]: {
+                articles: uniqueArticles,
+                hasMore: newArticles.length === 9,
+                timestamp: Date.now(),
+              },
+            },
+            loading: false,
+            loadingMore: false,
+          };
+        }),
+      setLoading: (loading) => set({ loading }),
+      setLoadingMore: (loading) => set({ loadingMore: loading }),
+      setError: (error) => set({ error }),
+      setPage: (page) => set({ page }),
+      setCurrentLanguage: (language) => 
         set((state) => ({
+          currentLanguage: language,
+          page: 1,
+          loading: true,
+          loadingMore: false,
           cache: {
             ...state.cache,
             [language]: {
-              articles: [...(state.cache[language]?.articles || []), ...newArticles],
-              hasMore: newArticles.length === 9,
-              timestamp: Date.now(),
-            },
-          },
+              articles: [],
+              hasMore: true,
+              timestamp: 0
+            }
+          }
         })),
-      setLoading: (loading) => set({ loading }),
-      setError: (error) => set({ error }),
-      setPage: (page) => set({ page }),
-      setCurrentLanguage: (language) => set({ currentLanguage: language, page: 1 }),
-      clearCache: () => set({ cache: {} }),
+      clearCache: () => set({ 
+        cache: {}, 
+        page: 1,
+        loading: true,
+        loadingMore: false,
+      }),
     }),
     {
       name: 'news-cache',
