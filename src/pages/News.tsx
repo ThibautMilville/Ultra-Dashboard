@@ -4,41 +4,55 @@ import axios from 'axios';
 import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useNewsStore } from '../store/newsStore';
+import { useNewsStore, shouldFetchArticles } from '../store/newsStore';
 
 const News: React.FC = () => {
   const { language } = useLanguage();
-  const fetchingRef = useRef(false);
+  const initialFetchRef = useRef(false);
+  const loadingRef = useRef(false);
   const {
-    articles,
-    categories,
-    hasMore,
+    cache,
+    currentLanguage,
     loading,
     loadingMore,
     error,
     page,
-    setArticles,
-    setCategories,
-    setHasMore,
+    updateCache,
+    appendToCache,
     setLoading,
     setLoadingMore,
     setError,
     setPage,
+    setCurrentLanguage,
+    clearCache,
   } = useNewsStore();
 
+  const currentCache = cache[currentLanguage];
+  const articles = currentCache?.articles || [];
+  const categories = currentCache?.categories || [];
+  const hasMore = currentCache?.hasMore ?? true;
+
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    
     try {
-      const languageCode = language === 'fr' ? 'fr-FR' : 'en-GB';
-
+      const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
+      
+      // Check cache for initial fetch
+      if (isNewFetch && currentCache && !shouldFetchArticles(currentCache.timestamp)) {
+        setLoading(false);
+        loadingRef.current = false;
+        return;
+      }
+      
       // Fetch categories if it's a new fetch
+      let currentCategories = categories;
       if (isNewFetch) {
         const categoriesResponse = await axios.get('/api-ultra-times-categories');
-        setCategories(categoriesResponse.data?.data || []);
+        currentCategories = categoriesResponse.data?.data || [];
       }
-
+      
       const response = await axios.get('/api-ultra-times-content', {
         params: {
           'page[limit]': 9,
@@ -50,14 +64,13 @@ const News: React.FC = () => {
 
       const newArticles = response.data?.data || [];
       const hasMoreArticles = newArticles.length === 9;
-
+      
       if (isNewFetch) {
-        setArticles(newArticles);
+        updateCache(currentLanguage, newArticles, currentCategories, hasMoreArticles);
       } else {
-        setArticles([...articles, ...newArticles]);
+        appendToCache(currentLanguage, newArticles, hasMoreArticles);
       }
 
-      setHasMore(hasMoreArticles);
       setError(null);
     } catch (err) {
       console.error('Error fetching articles:', err);
@@ -65,26 +78,29 @@ const News: React.FC = () => {
     } finally {
       setLoading(false);
       setLoadingMore(false);
-      fetchingRef.current = false;
+      loadingRef.current = false;
     }
-  }, [language, articles, setArticles, setCategories, setHasMore, setError, setLoading, setLoadingMore]);
+  }, [currentLanguage, currentCache, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
 
-  // Handle language changes
   useEffect(() => {
-    setPage(1);
-    setArticles([]);
-    setCategories([]);
-    setHasMore(true);
-    setLoading(true);
-    setLoadingMore(false);
-    setError(null);
-    fetchingRef.current = false;
-    fetchArticles(1, true);
-  }, [language]);
+    if (language !== currentLanguage) {
+      setCurrentLanguage(language);
+      initialFetchRef.current = false;
+    }
+  }, [language, currentLanguage, setCurrentLanguage]);
 
-  // Handle pagination
   useEffect(() => {
-    if (page > 1 && hasMore && !fetchingRef.current) {
+    if (!initialFetchRef.current) {
+      initialFetchRef.current = true;
+      if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
+        setLoading(true);
+        fetchArticles(1, true);
+      }
+    }
+  }, [currentCache, fetchArticles, setLoading]);
+
+  useEffect(() => {
+    if (page > 1 && hasMore && !loadingRef.current) {
       setLoadingMore(true);
       fetchArticles(page, false);
     }
@@ -97,25 +113,15 @@ const News: React.FC = () => {
 
   const handleReadMore = (categoryId: string, alias: string) => {
     const categoryAlias = getCategoryAlias(categoryId);
-    const langPrefix = language === 'fr' ? '' : 'en/';
+    const langPrefix = currentLanguage === 'fr' ? '' : 'en/';
     window.open(`https://ultratimes.io/${langPrefix}${categoryAlias}/${alias}`, '_blank');
   };
 
-  const handleLoadMore = () => {
-    if (!loadingMore && hasMore && !fetchingRef.current) {
-      setPage(page + 1);
-    }
-  };
-
   const handleRetry = () => {
-    setPage(1);
-    setArticles([]);
-    setCategories([]);
-    setHasMore(true);
+    clearCache();
+    initialFetchRef.current = false;
+    loadingRef.current = false;
     setLoading(true);
-    setLoadingMore(false);
-    setError(null);
-    fetchingRef.current = false;
     fetchArticles(1, true);
   };
 
@@ -174,7 +180,7 @@ const News: React.FC = () => {
           {hasMore && !loading && articles.length > 0 && (
             <LoadMoreButton
               loading={loadingMore}
-              onClick={handleLoadMore}
+              onClick={() => setPage(page + 1)}
             />
           )}
         </>
