@@ -8,10 +8,23 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api-ultra-times": {
+      "/api-ultra-times-categories": {
+        target: "https://ultratimes.io/api/index.php/v1/content/categories",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-ultra-times-categories/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            const token = process.env.VITE_ULTRA_TIMES_API_KEY || import.meta.env.VITE_ULTRA_TIMES_API_KEY;
+            if (token) {
+              proxyReq.setHeader('Authorization', `Bearer ${token}`);
+            }
+          });
+        },
+      },
+      "/api-ultra-times-content": {
         target: "https://ultratimes.io/api/index.php/v1/content/articles",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api-ultra-times/, ''),
+        rewrite: (path) => path.replace(/^\/api-ultra-times-content/, ''),
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
             const token = process.env.VITE_ULTRA_TIMES_API_KEY || import.meta.env.VITE_ULTRA_TIMES_API_KEY;

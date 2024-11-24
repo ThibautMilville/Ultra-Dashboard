@@ -1,3 +1,12 @@
+export interface Category {
+  id: string;
+  attributes: {
+    id: number;
+    title: string;
+    alias: string;
+  };
+}
+
 export interface Article {
   id: string;
   attributes: {
@@ -9,11 +18,20 @@ export interface Article {
     };
     text: string;
   };
+  relationships: {
+    category: {
+      data: {
+        type: string;
+        id: string;
+      };
+    };
+  };
 }
 
 export interface CacheData {
   [key: string]: {
     articles: Article[];
+    categories: Category[];
     hasMore: boolean;
     timestamp: number;
   };

@@ -8,7 +8,8 @@ interface ArticleCardProps {
   imageUrl: string;
   text: string;
   alias: string;
-  onReadMore: (alias: string) => void;
+  categoryId: string;
+  onReadMore: (categoryId: string, alias: string) => void;
 }
 
 const imageCache = new Map<string, string>();
@@ -19,6 +20,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   imageUrl,
   text,
   alias,
+  categoryId,
   onReadMore,
 }) => {
   const [imageSrc, setImageSrc] = useState<string>(() => imageCache.get(imageUrl) || imageUrl);
@@ -73,7 +75,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           {getExcerpt(text)}
         </p>
         <button
-          onClick={() => onReadMore(alias)}
+          onClick={() => onReadMore(categoryId, alias)}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className="relative inline-flex items-center justify-center w-full px-6 py-3.5 text-sm font-medium transition-all duration-200 bg-gray-50 hover:bg-primary-600/95 text-gray-900 hover:text-white rounded-lg overflow-hidden shadow-sm hover:shadow-md"

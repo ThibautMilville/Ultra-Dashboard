@@ -27,13 +27,21 @@ const News: React.FC = () => {
 
   const currentCache = cache[currentLanguage];
   const articles = currentCache?.articles || [];
+  const categories = currentCache?.categories || [];
   const hasMore = currentCache?.hasMore ?? true;
 
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
       
-      const response = await axios.get('/api-ultra-times', {
+      // Fetch categories if it's a new fetch
+      let currentCategories = categories;
+      if (isNewFetch) {
+        const categoriesResponse = await axios.get('/api-ultra-times-categories');
+        currentCategories = categoriesResponse.data?.data || [];
+      }
+      
+      const response = await axios.get('/api-ultra-times-content', {
         params: {
           'page[limit]': 9,
           'page[offset]': (pageNum - 1) * 9,
@@ -45,7 +53,7 @@ const News: React.FC = () => {
       const newArticles = response.data?.data || [];
       
       if (isNewFetch) {
-        updateCache(currentLanguage, newArticles, newArticles.length === 9);
+        updateCache(currentLanguage, newArticles, currentCategories, newArticles.length === 9);
       } else {
         appendToCache(currentLanguage, newArticles, newArticles.length === 9);
         setLoadingMore(false);
@@ -59,7 +67,7 @@ const News: React.FC = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [currentLanguage, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
+  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
 
   useEffect(() => {
     if (language !== currentLanguage) {
@@ -84,8 +92,14 @@ const News: React.FC = () => {
     }
   }, [currentCache, fetchArticles, setLoading]);
 
-  const handleReadMore = (alias: string) => {
-    window.open(`https://ultratimes.io/${alias}`, '_blank');
+  const getCategoryAlias = (categoryId: string): string => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category?.attributes.alias || '';
+  };
+
+  const handleReadMore = (categoryId: string, alias: string) => {
+    const categoryAlias = getCategoryAlias(categoryId);
+    window.open(`https://ultratimes.io/${categoryAlias}/${alias}`, '_blank');
   };
 
   const handleRetry = () => {
@@ -139,6 +153,7 @@ const News: React.FC = () => {
                   imageUrl={article.attributes.images.image_intro}
                   text={article.attributes.text}
                   alias={article.attributes.alias}
+                  categoryId={article.relationships.category.data.id}
                   onReadMore={handleReadMore}
                 />
               ))}

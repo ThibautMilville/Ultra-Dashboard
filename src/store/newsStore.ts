@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Article, CacheData } from '../types/news';
+import { Article, Category, CacheData } from '../types/news';
 
 interface NewsState {
   cache: CacheData;
@@ -9,7 +9,7 @@ interface NewsState {
   loadingMore: boolean;
   error: string | null;
   page: number;
-  updateCache: (language: string, articles: Article[], hasMore: boolean) => void;
+  updateCache: (language: string, articles: Article[], categories: Category[], hasMore: boolean) => void;
   appendToCache: (language: string, articles: Article[], hasMore: boolean) => void;
   setLoading: (loading: boolean) => void;
   setLoadingMore: (loading: boolean) => void;
@@ -30,12 +30,13 @@ export const useNewsStore = create<NewsState>()(
       loadingMore: false,
       error: null,
       page: 1,
-      updateCache: (language, articles, hasMore) =>
+      updateCache: (language, articles, categories, hasMore) =>
         set((state) => ({
           cache: {
             ...state.cache,
             [language]: {
               articles,
+              categories,
               hasMore,
               timestamp: Date.now(),
             },
@@ -58,6 +59,7 @@ export const useNewsStore = create<NewsState>()(
             cache: {
               ...state.cache,
               [language]: {
+                ...state.cache[language],
                 articles: uniqueArticles,
                 hasMore,
                 timestamp: Date.now(),
