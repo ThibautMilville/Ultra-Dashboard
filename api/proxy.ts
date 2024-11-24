@@ -8,9 +8,20 @@ export default async function handler(
   res: VercelResponse
 ) {
   try {
+    // Get the limit and offset query parameters
+    const { 'page[limit]': limit, 'page[offset]': offset } = req.query;
+
+    if (!limit || !offset) {
+      return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    const pageLimit = Number(limit);
+    const pageOffset = Number(offset);
+
     const response = await axios.get('https://ultratimes.io/api/index.php/v1/content/articles', {
       params: {
-        'page[limit]': 9,
+        'page[limit]': pageLimit,
+        'page[offset]': pageOffset,
       },
       headers: {
         'Content-Type': 'application/json',
@@ -20,6 +31,7 @@ export default async function handler(
 
     res.status(200).json(response.data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch price data' });
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch articles' });
   }
 }
