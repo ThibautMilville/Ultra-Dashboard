@@ -11,8 +11,8 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/proxy/:path*",
-      "destination": "/api/proxy"
+      "source": "/api-ultra-times/:path*",
+      "destination": "/api/ultra-times"
     },
     {
       "source": "/(.*)",

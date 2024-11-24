@@ -8,10 +8,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/proxy": {
+      "/api-ultra-times": {
         target: "https://ultratimes.io/api/index.php/v1/content/articles",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/proxy/, ''),
+        rewrite: (path) => path.replace(/^\/api-ultra-times/, ''),
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
             const token = process.env.VITE_ULTRA_TIMES_API_KEY || import.meta.env.VITE_ULTRA_TIMES_API_KEY;

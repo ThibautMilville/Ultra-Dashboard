@@ -29,7 +29,7 @@ const News: React.FC = () => {
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
-      const response = await axios.get('/proxy', {
+      const response = await axios.get('/api-ultra-times', {
         params: {
           'page[limit]': 9,
           'page[offset]': (pageNum - 1) * 9,
