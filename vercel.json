@@ -15,12 +15,12 @@
       "destination": "/api/coingecko-price"
     },
     {
-      "source": "/api-historical/:path*",
-      "destination": "/api/historical"
+      "source": "/api-coins/:path*",
+      "destination": "/api/coingecko-coins"
     },
     {
-      "source": "/api-market/:path*",
-      "destination": "/api/market-data"
+      "source": "/api-historical/:path*",
+      "destination": "/api/historical"
     },
     {
       "source": "/(.*)",

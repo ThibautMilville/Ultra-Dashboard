@@ -18,7 +18,7 @@ const Analytics: React.FC = () => {
       }
 
       try {
-        const response = await axios.get('https://api.coingecko.com/api/v3/coins/ultra', {
+        const response = await axios.get('/api-coins', {
           params: {
             localization: false,
             tickers: false,
@@ -26,9 +26,6 @@ const Analytics: React.FC = () => {
             developer_data: false,
             sparkline: false
           },
-          headers: {
-            'x-cg-demo-api-key': API_KEY
-          }
         });
 
         const data = response.data;
