@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PieChart, BarChart2, Coins, TrendingUp } from 'lucide-react';
 import CurrencyToggle from '../components/common/CurrencyToggle';
 import { useExchangeRate } from '../hooks/useExchangesRate';
+import { formatCurrency } from '../utils/formatters';
 import type { Currency } from '../types/common';
 
 const MetricCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({ title, value, icon }) => (
@@ -43,12 +44,7 @@ function Tokenomics() {
   const [currency, setCurrency] = useState<Currency>('USD');
   const { eurRate } = useExchangeRate();
 
-  const convertAmount = (amount: number) => {
-    return currency === 'EUR' ? amount * eurRate : amount;
-  };
-
-  const currencySymbol = currency === 'USD' ? '$' : '€';
-  const marketCap = convertAmount(76123291);
+  const marketCap = 76123291;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -78,7 +74,7 @@ function Tokenomics() {
         />
         <MetricCard
           title="Market Cap"
-          value={`${currencySymbol}${marketCap.toLocaleString()}`}
+          value={formatCurrency(marketCap, currency, eurRate)}
           icon={<BarChart2 className="h-6 w-6" />}
         />
         <MetricCard
@@ -96,32 +92,32 @@ function Tokenomics() {
               name="Gate.io"
               logo="https://assets.coingecko.com/markets/images/60/small/gate_io_logo1.jpg"
               pair="UOS/USDT"
-              volume={`${currencySymbol}${convertAmount(523891).toLocaleString()}`}
-              price={`${currencySymbol}${convertAmount(0.249843).toFixed(6)}`}
+              volume={`${formatCurrency(523336, currency, eurRate)}`}
+              price={`${formatCurrency(0.245, currency, eurRate)}`}
               status="active"
             />
             <Exchange
               name="MEXC Global"
               logo="https://assets.coingecko.com/markets/images/405/small/mexc.jpg"
               pair="UOS/USDT"
-              volume={`${currencySymbol}${convertAmount(421567).toLocaleString()}`}
-              price={`${currencySymbol}${convertAmount(0.249721).toFixed(6)}`}
+              volume={`${formatCurrency(523336, currency, eurRate)}`}
+              price={`${formatCurrency(0.245, currency, eurRate)}`}
               status="active"
             />
             <Exchange
               name="Huobi"
               logo="https://assets.coingecko.com/markets/images/25/small/logo_V_colour.png"
               pair="UOS/USDT"
-              volume={`${currencySymbol}${convertAmount(312445).toLocaleString()}`}
-              price={`${currencySymbol}${convertAmount(0.249902).toFixed(6)}`}
+              volume={`${formatCurrency(523336, currency, eurRate)}`}
+              price={`${formatCurrency(0.245, currency, eurRate)}`}
               status="active"
             />
             <Exchange
               name="KuCoin"
               logo="https://assets.coingecko.com/markets/images/61/small/kucoin.png"
               pair="UOS/USDT"
-              volume={`${currencySymbol}${convertAmount(298756).toLocaleString()}`}
-              price={`${currencySymbol}${convertAmount(0.249834).toFixed(6)}`}
+              volume={`${formatCurrency(523336, currency, eurRate)}`}
+              price={`${formatCurrency(0.245, currency, eurRate)}`}
               status="active"
             />
           </div>

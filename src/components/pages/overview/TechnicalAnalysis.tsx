@@ -1,14 +1,16 @@
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
+import { formatCurrency } from '../../../utils/formatters';
 
 interface TechnicalAnalysisProps {
   rsi: number;
   macd: number;
   price: number;
   currency: 'USD' | 'EUR';
+  eurRate: number;
 }
 
-const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ rsi, macd, price, currency }) => {
+const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ rsi, macd, price, currency, eurRate }) => {
   const getRSIInterpretation = (value: number) => {
     if (value >= 70) return { message: 'Overbought - Consider taking profits', type: 'warning' };
     if (value <= 30) return { message: 'Oversold - Potential buying opportunity', type: 'success' };
@@ -23,7 +25,6 @@ const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ rsi, macd, price,
 
   const rsiAnalysis = getRSIInterpretation(rsi);
   const macdAnalysis = getMACDInterpretation(macd);
-  const currencySymbol = currency === 'USD' ? '$' : '€';
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -58,7 +59,7 @@ const TechnicalAnalysis: React.FC<TechnicalAnalysisProps> = ({ rsi, macd, price,
         <div>
           <h3 className="text-sm font-medium text-gray-600 mb-1">Price Action</h3>
           <p className="text-sm text-gray-600">
-            Current price zone: {currencySymbol}{price.toFixed(6)} 
+            Current price zone: {formatCurrency(price, currency, eurRate, { decimals: 2 })}
           </p>
         </div>
       </div>

@@ -9,6 +9,7 @@ import CurrencyToggle from '../components/common/CurrencyToggle';
 import ProjectDescription from '../components/pages/overview/ProjectDescription';
 import { useExchangeRate } from '../hooks/useExchangesRate';
 import { useDataStore, shouldFetchData } from '../store/dataStore';
+import { formatCurrency } from '../utils/formatters';
 // Types
 import { PriceItem, TimeframeOption } from '../types/chart';
 import { Currency } from '../types/common';
@@ -209,7 +210,6 @@ function Overview() {
     );
   }
 
-  const currencySymbol = currency === 'USD' ? '$' : '€';
   const rsi = Math.round(50 + (priceData?.priceChange || 0) * 2);
   const macd = currentPrice * 0.01;
 
@@ -238,8 +238,7 @@ function Overview() {
           />
           <div className="text-left md:text-right">
             <p className="text-2xl md:text-3xl font-bold text-gray-900">
-              {currencySymbol}
-              {currentPrice.toFixed(6)}
+              {formatCurrency(currentPrice, currency, eurRate, { decimals: 6 })}
             </p>
             <p
               className={`text-sm font-medium ${(priceData?.priceChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'
@@ -261,15 +260,13 @@ function Overview() {
         />
         <TechnicalIndicator
           title="MACD"
-          value={macd.toFixed(6)}
+          value={formatCurrency(macd, currency, eurRate, { decimals: 6 })}
           change={(priceData?.priceChange || 0) * 1.2}
           icon={<TrendingUp className="h-5 w-5" />}
         />
         <TechnicalIndicator
           title="Volume 24h"
-          value={`${currencySymbol}${(
-            currentPrice * 1234567
-          ).toLocaleString()}`}
+          value={formatCurrency(currentPrice * 1234567, currency, eurRate)}
           change={(priceData?.priceChange || 0) * 0.8}
           icon={<BarChart3 className="h-5 w-5" />}
         />
@@ -295,7 +292,7 @@ function Overview() {
           <PriceChart
             data={getCurrentChartData}
             currency={currency}
-            currencySymbol={currencySymbol}
+            currencySymbol={currency === 'USD' ? '$' : '€'}
           />
         </div>
         <div className="lg:col-span-1">
@@ -304,6 +301,7 @@ function Overview() {
             macd={macd}
             price={currentPrice}
             currency={currency}
+            eurRate={eurRate}
           />
         </div>
       </div>
