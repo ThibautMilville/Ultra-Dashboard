@@ -4,12 +4,13 @@ import axios from 'axios';
 import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useNewsStore, shouldFetchArticles } from '../store/newsStore';
+import { useNewsStore } from '../store/newsStore';
 
 const News: React.FC = () => {
   const { language } = useLanguage();
-  const initialFetchRef = useRef(false);
   const loadingRef = useRef(false);
+  const initialLoadRef = useRef(false);
+  
   const {
     cache,
     currentLanguage,
@@ -39,13 +40,6 @@ const News: React.FC = () => {
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
       
-      // Check cache for initial fetch
-      if (isNewFetch && currentCache && !shouldFetchArticles(currentCache.timestamp)) {
-        setLoading(false);
-        loadingRef.current = false;
-        return;
-      }
-      
       // Fetch categories if it's a new fetch
       let currentCategories = categories;
       if (isNewFetch) {
@@ -62,7 +56,11 @@ const News: React.FC = () => {
         }
       });
 
-      const newArticles = response.data?.data || [];
+      if (!response.data || !response.data.data) {
+        throw new Error('Invalid response format');
+      }
+
+      const newArticles = response.data.data;
       const hasMoreArticles = newArticles.length === 9;
       
       if (isNewFetch) {
@@ -80,25 +78,22 @@ const News: React.FC = () => {
       setLoadingMore(false);
       loadingRef.current = false;
     }
-  }, [currentLanguage, currentCache, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
+  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
 
+  // Gérer le changement de langue
   useEffect(() => {
     if (language !== currentLanguage) {
       setCurrentLanguage(language);
-      initialFetchRef.current = false;
-    }
-  }, [language, currentLanguage, setCurrentLanguage]);
-
-  useEffect(() => {
-    if (!initialFetchRef.current) {
-      initialFetchRef.current = true;
-      if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
+      clearCache();
+      if (!initialLoadRef.current) {
+        initialLoadRef.current = true;
         setLoading(true);
         fetchArticles(1, true);
       }
     }
-  }, [currentCache, fetchArticles, setLoading]);
+  }, [language, currentLanguage, setCurrentLanguage, clearCache, fetchArticles, setLoading]);
 
+  // Charger plus d'articles
   useEffect(() => {
     if (page > 1 && hasMore && !loadingRef.current) {
       setLoadingMore(true);
@@ -119,8 +114,8 @@ const News: React.FC = () => {
 
   const handleRetry = () => {
     clearCache();
-    initialFetchRef.current = false;
     loadingRef.current = false;
+    initialLoadRef.current = false;
     setLoading(true);
     fetchArticles(1, true);
   };

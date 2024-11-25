@@ -21,11 +21,24 @@ interface NewsState {
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+const getInitialLanguage = () => {
+  const savedLanguage = localStorage.getItem('ultra_dashboard_language');
+  if (savedLanguage && ['en', 'fr'].includes(savedLanguage)) {
+    return savedLanguage;
+  }
+  
+  const browserLang = navigator.language.toLowerCase();
+  if (browserLang.startsWith('fr')) {
+    return 'fr';
+  }
+  return 'en';
+};
+
 export const useNewsStore = create<NewsState>()(
   persist(
     (set) => ({
       cache: {},
-      currentLanguage: 'en',
+      currentLanguage: getInitialLanguage(),
       loading: false,
       loadingMore: false,
       error: null,

@@ -21,17 +21,22 @@ interface LanguageProviderProps {
 
 const LANGUAGE_KEY = 'ultra_dashboard_language';
 
+const getInitialLanguage = () => {
+  // Get language from localStorage or use browser language or fallback to 'en'
+  const savedLanguage = localStorage.getItem(LANGUAGE_KEY);
+  if (savedLanguage && ['en', 'fr'].includes(savedLanguage)) {
+    return savedLanguage;
+  }
+  
+  const browserLang = navigator.language.toLowerCase();
+  if (browserLang.startsWith('fr')) {
+    return 'fr';
+  }
+  return 'en';
+};
+
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [language, setLanguageState] = useState(() => {
-    // Get language from localStorage or use browser language or fallback to 'en'
-    const savedLanguage = localStorage.getItem(LANGUAGE_KEY);
-    if (savedLanguage && ['en', 'fr'].includes(savedLanguage)) {
-      return savedLanguage;
-    }
-    
-    const browserLang = navigator.language.split('-')[0];
-    return ['en', 'fr'].includes(browserLang) ? browserLang : 'en';
-  });
+  const [language, setLanguageState] = useState(getInitialLanguage);
 
   const setLanguage = (lang: string) => {
     setLanguageState(lang);
