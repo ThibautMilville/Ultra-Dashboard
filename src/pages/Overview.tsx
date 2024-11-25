@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { TrendingUp, ArrowUpDown, Activity, BarChart3 } from 'lucide-react';
+import { TrendingUp, ArrowUpDown, Activity, BarChart3, TrendingDown } from 'lucide-react';
 import PriceChart from '../components/pages/overview/PriceChart';
 import TechnicalIndicator from '../components/pages/overview/TechnicalIndicator';
 import TechnicalAnalysis from '../components/pages/overview/TechnicalAnalysis';
@@ -11,8 +11,8 @@ import { useExchangeRate } from '../hooks/useExchangesRate';
 import { useDataStore, shouldFetchData } from '../store/dataStore';
 import { formatCurrency } from '../utils/formatters';
 // Types
-import { PriceItem, TimeframeOption } from '../types/chart';
-import { Currency } from '../types/common';
+import type { PriceItem, TimeframeOption } from '../types/chart';
+import type { Currency } from '../types/common';
 
 function Overview() {
   const { eurRate, loading: rateLoading, error: rateError } = useExchangeRate();
@@ -22,14 +22,12 @@ function Overview() {
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const { priceData, chartData, setPriceData, setChartData } = useDataStore();
+  const { priceData, chartData, marketData, setPriceData, setChartData, setMarketData } = useDataStore();
 
-  // Memoized price in current currency
   const currentPrice = useMemo(() => {
     return currency === 'USD' ? priceData?.usdPrice || 0 : (priceData?.usdPrice || 0) * eurRate;
   }, [priceData?.usdPrice, eurRate, currency]);
 
-  // Memoized chart data in current currency
   const getCurrentChartData = useMemo(() => {
     if (!chartData) return [];
 
@@ -76,6 +74,11 @@ function Overview() {
           await fetchPriceData();
         }
 
+        // Fetch market data if needed
+        if (!marketData || shouldFetchData(marketData.lastFetched)) {
+          await fetchMarketData();
+        }
+
         // Fetch chart data if needed
         if (!chartData || shouldFetchData(chartData.lastFetched)) {
           await fetchAllChartData();
@@ -118,6 +121,44 @@ function Overview() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
+      throw err;
+    }
+  };
+
+  const fetchMarketData = async () => {
+    try {
+      const response = await axios.get('/api-coins', {
+        params: {
+          id: 'ultra',
+          localization: false,
+          tickers: false,
+          community_data: false,
+          developer_data: false,
+          sparkline: false
+        },
+      });
+
+      const data = response.data;
+      if (!data || !data.market_data) {
+        throw new Error('Invalid market data received');
+      }
+
+      const marketData = data.market_data;
+      setMarketData({
+        market_cap: marketData.market_cap?.usd || 0,
+        total_volume: marketData.total_volume?.usd || 0,
+        price_change_percentage_24h: marketData.price_change_percentage_24h || 0,
+        price_change_percentage_7d: marketData.price_change_percentage_7d || 0,
+        price_change_percentage_30d: marketData.price_change_percentage_30d || 0,
+        total_supply: marketData.total_supply || 0,
+        circulating_supply: marketData.circulating_supply || 0,
+        market_cap_rank: data.market_cap_rank || 0,
+        ath: marketData.ath?.usd || 0,
+        atl: marketData.atl?.usd || 0,
+        lastFetched: Date.now()
+      });
+    } catch (err) {
+      console.error('Error fetching market data:', err);
       throw err;
     }
   };
@@ -186,6 +227,41 @@ function Overview() {
     }
   };
 
+  // Technical indicator calculations
+  const calculateRSI = (data: PriceItem[]) => {
+    if (data.length < 15) return 50;
+
+    const changes = data.slice(1).map((item, i) => item.value - data[i].value);
+    const gains = changes.map(change => change > 0 ? change : 0);
+    const losses = changes.map(change => change < 0 ? -change : 0);
+
+    const avgGain = gains.slice(-14).reduce((sum, gain) => sum + gain, 0) / 14;
+    const avgLoss = losses.slice(-14).reduce((sum, loss) => sum + loss, 0) / 14;
+
+    if (avgLoss === 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - (100 / (1 + rs));
+  };
+
+  const calculateMACD = (data: PriceItem[]) => {
+    if (data.length < 26) return 0;
+
+    const ema12 = calculateEMA(data, 12);
+    const ema26 = calculateEMA(data, 26);
+    return ema12 - ema26;
+  };
+
+  const calculateEMA = (data: PriceItem[], period: number) => {
+    const k = 2 / (period + 1);
+    let ema = data[0].value;
+
+    for (let i = 1; i < data.length; i++) {
+      ema = data[i].value * k + ema * (1 - k);
+    }
+
+    return ema;
+  };
+
   if (loading || rateLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -210,8 +286,10 @@ function Overview() {
     );
   }
 
-  const rsi = Math.round(50 + (priceData?.priceChange || 0) * 2);
-  const macd = currentPrice * 0.01;
+  const volume24h = marketData?.total_volume || 0;
+  const volatility = Math.abs((marketData?.price_change_percentage_24h || 0) * 0.4);
+  const rsi = calculateRSI(getCurrentChartData);
+  const macd = calculateMACD(getCurrentChartData);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -241,11 +319,11 @@ function Overview() {
               {formatCurrency(currentPrice, currency, eurRate, { decimals: 6 })}
             </p>
             <p
-              className={`text-sm font-medium ${(priceData?.priceChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+              className={`text-sm font-medium ${(marketData?.price_change_percentage_24h || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}
             >
-              {(priceData?.priceChange || 0) >= 0 ? '↑' : '↓'}{' '}
-              {Math.abs(priceData?.priceChange || 0).toFixed(2)}%
+              {(marketData?.price_change_percentage_24h || 0) >= 0 ? '↑' : '↓'}{' '}
+              {Math.abs(marketData?.price_change_percentage_24h || 0).toFixed(2)}%
             </p>
           </div>
         </div>
@@ -254,26 +332,26 @@ function Overview() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         <TechnicalIndicator
           title="RSI (14)"
-          value={rsi}
-          change={priceData?.priceChange || 0}
+          value={rsi.toFixed(2)}
+          change={marketData?.price_change_percentage_24h || 0}
           icon={<Activity className="h-5 w-5" />}
         />
         <TechnicalIndicator
           title="MACD"
-          value={formatCurrency(macd, currency, eurRate, { decimals: 6 })}
-          change={(priceData?.priceChange || 0) * 1.2}
-          icon={<TrendingUp className="h-5 w-5" />}
+          value={macd.toFixed(6)}
+          change={(marketData?.price_change_percentage_24h || 0) * 1.2}
+          icon={macd >= 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
         />
         <TechnicalIndicator
           title="Volume 24h"
-          value={formatCurrency(currentPrice * 1234567, currency, eurRate)}
-          change={(priceData?.priceChange || 0) * 0.8}
+          value={formatCurrency(volume24h, currency, eurRate)}
+          change={(marketData?.price_change_percentage_24h || 0) * 0.8}
           icon={<BarChart3 className="h-5 w-5" />}
         />
         <TechnicalIndicator
           title="Volatility"
-          value={`${Math.abs((priceData?.priceChange || 0) * 0.4).toFixed(2)}%`}
-          change={(priceData?.priceChange || 0) * 0.5}
+          value={`${volatility.toFixed(2)}%`}
+          change={(marketData?.price_change_percentage_24h || 0) * 0.5}
           icon={<ArrowUpDown className="h-5 w-5" />}
         />
       </div>
