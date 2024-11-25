@@ -3,12 +3,10 @@ import { Loader } from 'lucide-react';
 import axios from 'axios';
 import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
-import { useLanguage } from '../contexts/LanguageContext';
 import { useNewsStore } from '../store/newsStore';
 import { useRouterStore } from '../store/routerStore';
 
 const News: React.FC = () => {
-  const { language } = useLanguage();
   const { currentRoute } = useRouterStore();
   const loadingRef = useRef(false);
   
