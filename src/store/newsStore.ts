@@ -90,12 +90,18 @@ export const useNewsStore = create<NewsState>()(
       setError: (error) => set({ error }),
       setPage: (page) => set({ page }),
       setCurrentLanguage: (language) => 
-        set({
-          currentLanguage: language,
-          page: 1,
-          loading: true,
-          loadingMore: false,
-          hasInitialized: false,
+        set((state) => {
+          // Check if we have valid cached data for the new language
+          const cachedData = state.cache[language];
+          const isCacheValid = cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION;
+          
+          return {
+            currentLanguage: language,
+            page: 1,
+            loading: !isCacheValid, // Only set loading to true if we need to fetch new data
+            loadingMore: false,
+            hasInitialized: isCacheValid, // Consider initialized if we have valid cache
+          };
         }),
       clearCache: () => set({ 
         cache: {}, 

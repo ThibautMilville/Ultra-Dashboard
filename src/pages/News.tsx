@@ -3,7 +3,7 @@ import { Loader } from 'lucide-react';
 import axios from 'axios';
 import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
-import { useNewsStore } from '../store/newsStore';
+import { useNewsStore, shouldFetchArticles } from '../store/newsStore';
 import { useRouterStore } from '../store/routerStore';
 
 const News: React.FC = () => {
@@ -37,6 +37,14 @@ const News: React.FC = () => {
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
+
+    // Check if we have valid cached data
+    if (!isNewFetch && currentCache && !shouldFetchArticles(currentCache.timestamp)) {
+      loadingRef.current = false;
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
     
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
@@ -85,7 +93,7 @@ const News: React.FC = () => {
       setLoadingMore(false);
       loadingRef.current = false;
     }
-  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
+  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore, currentCache]);
 
   // Handle language changes
   useEffect(() => {
@@ -95,27 +103,30 @@ const News: React.FC = () => {
       
       if (newLanguage !== currentLanguage) {
         setCurrentLanguage(newLanguage);
-        clearCache();
-        setLoading(true);
-        setPage(1);
-        loadingRef.current = false;
-        fetchArticles(1, true);
+        // Only fetch if we don't have valid cached data
+        if (!cache[newLanguage] || shouldFetchArticles(cache[newLanguage].timestamp)) {
+          loadingRef.current = false;
+          fetchArticles(1, true);
+        }
       }
     };
 
     window.addEventListener('languageChange', handleLanguageChange);
     return () => window.removeEventListener('languageChange', handleLanguageChange);
-  }, [currentLanguage, setCurrentLanguage, clearCache, setLoading, setPage, fetchArticles]);
+  }, [currentLanguage, setCurrentLanguage, fetchArticles, cache]);
 
   // Handle initial load and route changes
   useEffect(() => {
     if (currentRoute === 'news' && !hasInitialized) {
       setHasInitialized(true);
-      setLoading(true);
-      loadingRef.current = false;
-      fetchArticles(1, true);
+      // Only fetch if we don't have valid cached data
+      if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
+        setLoading(true);
+        loadingRef.current = false;
+        fetchArticles(1, true);
+      }
     }
-  }, [currentRoute, hasInitialized, setHasInitialized, fetchArticles, setLoading]);
+  }, [currentRoute, hasInitialized, setHasInitialized, fetchArticles, currentCache, setLoading]);
 
   // Handle pagination
   useEffect(() => {
