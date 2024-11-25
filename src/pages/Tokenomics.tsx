@@ -50,15 +50,17 @@ function Tokenomics() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">UOS Token Economics</h1>
-          <p className="text-lg text-gray-600">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">UOS Token Economics</h1>
+          <p className="text-lg text-gray-600 mt-2">
             Comprehensive overview of Ultra's token distribution, utility, and economic model.
           </p>
         </div>
-        <CurrencyToggle
-          currency={currency}
-          onCurrencyChange={setCurrency}
-        />
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <CurrencyToggle
+            currency={currency}
+            onCurrencyChange={setCurrency}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">

@@ -99,12 +99,14 @@ const Analytics: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="mt-2 text-gray-600">Detailed analysis of Ultra ($UOS) network metrics and performance</p>
+          <p className="text-lg text-gray-600 mt-2">Detailed analysis of Ultra ($UOS) network metrics and performance</p>
         </div>
-        <CurrencyToggle
-          currency={currency}
-          onCurrencyChange={setCurrency}
-        />
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <CurrencyToggle
+            currency={currency}
+            onCurrencyChange={setCurrency}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
