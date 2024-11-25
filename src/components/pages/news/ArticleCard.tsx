@@ -13,6 +13,7 @@ interface ArticleCardProps {
 }
 
 const imageCache = new Map<string, string>();
+const fallbackImage = 'https://assets.coingecko.com/coins/images/4480/small/Ultra.png';
 
 const ArticleCard: React.FC<ArticleCardProps> = ({
   title,
@@ -34,19 +35,32 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
         setImageSrc(imageUrl);
       };
       img.onerror = () => {
-        const fallbackUrl = 'https://assets.coingecko.com/coins/images/4480/small/Ultra.png';
-        imageCache.set(imageUrl, fallbackUrl);
-        setImageSrc(fallbackUrl);
+        imageCache.set(imageUrl, fallbackImage);
+        setImageSrc(fallbackImage);
       };
       img.src = imageUrl;
     }
   }, [imageUrl]);
 
   const getExcerpt = (content: string) => {
-    const div = document.createElement('div');
-    div.innerHTML = content;
-    const textContent = div.textContent || div.innerText;
-    return textContent.slice(0, 300) + '...';
+    try {
+      const div = document.createElement('div');
+      div.innerHTML = content;
+      const textContent = div.textContent || div.innerText;
+      return textContent.slice(0, 150) + '...';
+    } catch (error) {
+      console.error('Error parsing article content:', error);
+      return 'Article content unavailable';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Date unavailable';
+    }
   };
 
   const handleClick = () => onReadMore(categoryId, alias);
@@ -62,6 +76,12 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           alt={title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (target.src !== fallbackImage) {
+              target.src = fallbackImage;
+            }
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-primary-600 px-4 py-1.5 rounded-full text-sm font-medium shadow-sm">
@@ -71,7 +91,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
       <div className="p-6">
         <div className="flex items-center text-gray-500 text-sm mb-3">
           <Calendar className="h-4 w-4 mr-2" />
-          {format(new Date(created), 'MMM dd, yyyy')}
+          {formatDate(created)}
         </div>
         <h3 
           className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2 min-h-[3.5rem] group-hover:text-primary-600 transition-colors duration-200 cursor-pointer"
@@ -79,7 +99,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
         >
           {title}
         </h3>
-        <p className="text-gray-600 mb-6 line-clamp-4 min-h-[6rem]">
+        <p className="text-gray-600 mb-6 line-clamp-3 min-h-[4.5rem]">
           {getExcerpt(text)}
         </p>
         <button
@@ -96,7 +116,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
               isHovered ? 'transform translate-x-1 -translate-y-1' : ''
             }`} />
           </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-600/0 via-primary-600/5 to-primary-600/0 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
         </button>
       </div>
     </div>

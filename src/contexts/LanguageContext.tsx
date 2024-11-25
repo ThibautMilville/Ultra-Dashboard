@@ -22,7 +22,6 @@ interface LanguageProviderProps {
 const LANGUAGE_KEY = 'ultra_dashboard_language';
 
 const getInitialLanguage = () => {
-  // Get language from localStorage or use browser language or fallback to 'en'
   const savedLanguage = localStorage.getItem(LANGUAGE_KEY);
   if (savedLanguage && ['en', 'fr'].includes(savedLanguage)) {
     return savedLanguage;
@@ -39,15 +38,19 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const [language, setLanguageState] = useState(getInitialLanguage);
 
   const setLanguage = (lang: string) => {
-    setLanguageState(lang);
-    localStorage.setItem(LANGUAGE_KEY, lang);
+    if (lang !== language) {
+      setLanguageState(lang);
+      localStorage.setItem(LANGUAGE_KEY, lang);
+      
+      // Dispatch a custom event for language change
+      window.dispatchEvent(new CustomEvent('languageChange', { detail: { language: lang } }));
+    }
   };
 
   const t = (key: string): string => {
     return translations[language]?.[key] || translations['en'][key] || key;
   };
 
-  // Update document language attribute
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);

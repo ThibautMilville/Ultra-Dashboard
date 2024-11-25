@@ -5,11 +5,12 @@ import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNewsStore } from '../store/newsStore';
+import { useRouterStore } from '../store/routerStore';
 
 const News: React.FC = () => {
   const { language } = useLanguage();
+  const { currentRoute } = useRouterStore();
   const loadingRef = useRef(false);
-  const initialLoadRef = useRef(false);
   
   const {
     cache,
@@ -18,6 +19,7 @@ const News: React.FC = () => {
     loadingMore,
     error,
     page,
+    hasInitialized,
     updateCache,
     appendToCache,
     setLoading,
@@ -26,6 +28,7 @@ const News: React.FC = () => {
     setPage,
     setCurrentLanguage,
     clearCache,
+    setHasInitialized,
   } = useNewsStore();
 
   const currentCache = cache[currentLanguage];
@@ -40,10 +43,13 @@ const News: React.FC = () => {
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
       
-      // Fetch categories if it's a new fetch
       let currentCategories = categories;
       if (isNewFetch) {
-        const categoriesResponse = await axios.get('/api-ultra-times-categories');
+        const categoriesResponse = await axios.get('/api-ultra-times-categories', {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         currentCategories = categoriesResponse.data?.data || [];
       }
       
@@ -52,7 +58,10 @@ const News: React.FC = () => {
           'page[limit]': 9,
           'page[offset]': (pageNum - 1) * 9,
           'filter[language]': languageCode,
-          'filter[state]': 1
+          'filter[state]': 1,
+        },
+        headers: {
+          'Content-Type': 'application/json'
         }
       });
 
@@ -80,20 +89,37 @@ const News: React.FC = () => {
     }
   }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
 
-  // Gérer le changement de langue
+  // Handle language changes
   useEffect(() => {
-    if (language !== currentLanguage) {
-      setCurrentLanguage(language);
-      clearCache();
-      if (!initialLoadRef.current) {
-        initialLoadRef.current = true;
+    const handleLanguageChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const newLanguage = customEvent.detail.language;
+      
+      if (newLanguage !== currentLanguage) {
+        setCurrentLanguage(newLanguage);
+        clearCache();
         setLoading(true);
+        setPage(1);
+        loadingRef.current = false;
         fetchArticles(1, true);
       }
-    }
-  }, [language, currentLanguage, setCurrentLanguage, clearCache, fetchArticles, setLoading]);
+    };
 
-  // Charger plus d'articles
+    window.addEventListener('languageChange', handleLanguageChange);
+    return () => window.removeEventListener('languageChange', handleLanguageChange);
+  }, [currentLanguage, setCurrentLanguage, clearCache, setLoading, setPage, fetchArticles]);
+
+  // Handle initial load and route changes
+  useEffect(() => {
+    if (currentRoute === 'news' && !hasInitialized) {
+      setHasInitialized(true);
+      setLoading(true);
+      loadingRef.current = false;
+      fetchArticles(1, true);
+    }
+  }, [currentRoute, hasInitialized, setHasInitialized, fetchArticles, setLoading]);
+
+  // Handle pagination
   useEffect(() => {
     if (page > 1 && hasMore && !loadingRef.current) {
       setLoadingMore(true);
@@ -115,7 +141,6 @@ const News: React.FC = () => {
   const handleRetry = () => {
     clearCache();
     loadingRef.current = false;
-    initialLoadRef.current = false;
     setLoading(true);
     fetchArticles(1, true);
   };
@@ -162,7 +187,7 @@ const News: React.FC = () => {
                   key={article.id}
                   title={article.attributes.title}
                   created={article.attributes.created}
-                  imageUrl={article.attributes.images.image_intro}
+                  imageUrl={article.attributes.images.image_intro || 'https://assets.coingecko.com/coins/images/4480/small/Ultra.png'}
                   text={article.attributes.text}
                   alias={article.attributes.alias}
                   categoryId={article.relationships.category.data.id}

@@ -9,6 +9,7 @@ interface NewsState {
   loadingMore: boolean;
   error: string | null;
   page: number;
+  hasInitialized: boolean;
   updateCache: (language: string, articles: Article[], categories: Category[], hasMore: boolean) => void;
   appendToCache: (language: string, articles: Article[], hasMore: boolean) => void;
   setLoading: (loading: boolean) => void;
@@ -17,6 +18,7 @@ interface NewsState {
   setPage: (page: number) => void;
   setCurrentLanguage: (language: string) => void;
   clearCache: () => void;
+  setHasInitialized: (value: boolean) => void;
 }
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -43,6 +45,7 @@ export const useNewsStore = create<NewsState>()(
       loadingMore: false,
       error: null,
       page: 1,
+      hasInitialized: false,
       updateCache: (language, articles, categories, hasMore) =>
         set((state) => ({
           cache: {
@@ -87,18 +90,21 @@ export const useNewsStore = create<NewsState>()(
       setError: (error) => set({ error }),
       setPage: (page) => set({ page }),
       setCurrentLanguage: (language) => 
-        set((state) => ({
+        set({
           currentLanguage: language,
           page: 1,
-          loading: !state.cache[language],
+          loading: true,
           loadingMore: false,
-        })),
+          hasInitialized: false,
+        }),
       clearCache: () => set({ 
         cache: {}, 
         page: 1,
         loading: true,
         loadingMore: false,
+        hasInitialized: false,
       }),
+      setHasInitialized: (value) => set({ hasInitialized: value }),
     }),
     {
       name: 'news-cache',
