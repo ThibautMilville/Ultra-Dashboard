@@ -3,7 +3,7 @@ import { Loader } from 'lucide-react';
 import axios from 'axios';
 import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
-import { useNewsStore, shouldFetchArticles } from '../store/newsStore';
+import { useNewsStore } from '../store/newsStore';
 import { useRouterStore } from '../store/routerStore';
 
 const News: React.FC = () => {
@@ -37,14 +37,6 @@ const News: React.FC = () => {
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
-
-    // Check if we have valid cached data
-    if (!isNewFetch && currentCache && !shouldFetchArticles(currentCache.timestamp)) {
-      loadingRef.current = false;
-      setLoading(false);
-      setLoadingMore(false);
-      return;
-    }
     
     try {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
@@ -93,9 +85,8 @@ const News: React.FC = () => {
       setLoadingMore(false);
       loadingRef.current = false;
     }
-  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore, currentCache]);
+  }, [currentLanguage, categories, updateCache, appendToCache, setError, setLoading, setLoadingMore]);
 
-  // Handle language changes
   useEffect(() => {
     const handleLanguageChange = (event: Event) => {
       const customEvent = event as CustomEvent;
@@ -103,32 +94,27 @@ const News: React.FC = () => {
       
       if (newLanguage !== currentLanguage) {
         setCurrentLanguage(newLanguage);
-        // Only fetch if we don't have valid cached data
-        if (!cache[newLanguage] || shouldFetchArticles(cache[newLanguage].timestamp)) {
-          loadingRef.current = false;
-          fetchArticles(1, true);
-        }
+        clearCache();
+        setLoading(true);
+        setPage(1);
+        loadingRef.current = false;
+        fetchArticles(1, true);
       }
     };
 
     window.addEventListener('languageChange', handleLanguageChange);
     return () => window.removeEventListener('languageChange', handleLanguageChange);
-  }, [currentLanguage, setCurrentLanguage, fetchArticles, cache]);
+  }, [currentLanguage, setCurrentLanguage, clearCache, setLoading, setPage, fetchArticles]);
 
-  // Handle initial load and route changes
   useEffect(() => {
     if (currentRoute === 'news' && !hasInitialized) {
       setHasInitialized(true);
-      // Only fetch if we don't have valid cached data
-      if (!currentCache || shouldFetchArticles(currentCache.timestamp)) {
-        setLoading(true);
-        loadingRef.current = false;
-        fetchArticles(1, true);
-      }
+      setLoading(true);
+      loadingRef.current = false;
+      fetchArticles(1, true);
     }
-  }, [currentRoute, hasInitialized, setHasInitialized, fetchArticles, currentCache, setLoading]);
+  }, [currentRoute, hasInitialized, setHasInitialized, fetchArticles, setLoading]);
 
-  // Handle pagination
   useEffect(() => {
     if (page > 1 && hasMore && !loadingRef.current) {
       setLoadingMore(true);
@@ -145,6 +131,12 @@ const News: React.FC = () => {
     const categoryAlias = getCategoryAlias(categoryId);
     const langPrefix = currentLanguage === 'fr' ? '' : 'en/';
     window.open(`https://ultratimes.io/${langPrefix}${categoryAlias}/${alias}`, '_blank');
+  };
+
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      setPage(page + 1);
+    }
   };
 
   const handleRetry = () => {
@@ -209,7 +201,7 @@ const News: React.FC = () => {
           {hasMore && !loading && articles.length > 0 && (
             <LoadMoreButton
               loading={loadingMore}
-              onClick={() => setPage(page + 1)}
+              onClick={handleLoadMore}
             />
           )}
         </>
