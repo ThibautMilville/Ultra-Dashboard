@@ -62,21 +62,25 @@ export const useNewsStore = create<NewsState>()(
         })),
       appendToCache: (language, newArticles, hasMore) =>
         set((state) => {
-          const existingArticles = state.cache[language]?.articles || [];
-          const uniqueArticles = [...existingArticles];
+          const existingCache = state.cache[language] || {
+            articles: [],
+            categories: [],
+            hasMore: true,
+            timestamp: Date.now(),
+          };
           
-          newArticles.forEach(article => {
-            if (!existingArticles.some(existing => existing.id === article.id)) {
-              uniqueArticles.push(article);
-            }
-          });
+          // Create a map of existing article IDs for faster lookup
+          const existingArticleIds = new Set(existingCache.articles.map(article => article.id));
+          
+          // Filter out duplicates and append new articles
+          const uniqueNewArticles = newArticles.filter(article => !existingArticleIds.has(article.id));
           
           return {
             cache: {
               ...state.cache,
               [language]: {
-                ...state.cache[language],
-                articles: uniqueArticles,
+                ...existingCache,
+                articles: [...existingCache.articles, ...uniqueNewArticles],
                 hasMore,
                 timestamp: Date.now(),
               },
@@ -91,16 +95,13 @@ export const useNewsStore = create<NewsState>()(
       setPage: (page) => set({ page }),
       setCurrentLanguage: (language) => 
         set((state) => {
-          // Check if we have valid cached data for the new language
           const cachedData = state.cache[language];
-          const isCacheValid = cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION;
-          
           return {
             currentLanguage: language,
             page: 1,
-            loading: !isCacheValid, // Only set loading to true if we need to fetch new data
+            loading: !cachedData?.articles,
             loadingMore: false,
-            hasInitialized: isCacheValid, // Consider initialized if we have valid cache
+            hasInitialized: !!cachedData?.articles,
           };
         }),
       clearCache: () => set({ 

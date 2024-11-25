@@ -2,12 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { TrendingUp, ArrowUpDown, DollarSign, Activity } from 'lucide-react';
 import axios from 'axios';
 import { useDataStore, shouldFetchData } from '../store/dataStore';
+import CurrencyToggle from '../components/common/CurrencyToggle';
+import { useExchangeRate } from '../hooks/useExchangesRate';
+import type { Currency } from '../types/common';
 
 const Analytics: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<Currency>('USD');
   
   const { marketData, setMarketData } = useDataStore();
+  const { eurRate } = useExchangeRate();
+
+  const convertAmount = (amount: number) => {
+    return currency === 'EUR' ? amount * eurRate : amount;
+  };
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -86,11 +95,19 @@ const Analytics: React.FC = () => {
     return null;
   }
 
+  const currencySymbol = currency === 'USD' ? '$' : '€';
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-        <p className="mt-2 text-gray-600">Detailed analysis of Ultra ($UOS) network metrics and performance</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p className="mt-2 text-gray-600">Detailed analysis of Ultra ($UOS) network metrics and performance</p>
+        </div>
+        <CurrencyToggle
+          currency={currency}
+          onCurrencyChange={setCurrency}
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -100,7 +117,7 @@ const Analytics: React.FC = () => {
             <DollarSign className="h-5 w-5 text-primary-600" />
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            ${marketData.market_cap.toLocaleString()}
+            {currencySymbol}{convertAmount(marketData.market_cap).toLocaleString()}
           </p>
           <p className={`text-sm ${marketData.price_change_percentage_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {marketData.price_change_percentage_24h.toFixed(2)}% (24h)
@@ -113,7 +130,7 @@ const Analytics: React.FC = () => {
             <Activity className="h-5 w-5 text-primary-600" />
           </div>
           <p className="text-2xl font-bold text-gray-900">
-            ${marketData.total_volume.toLocaleString()}
+            {currencySymbol}{convertAmount(marketData.total_volume).toLocaleString()}
           </p>
           <p className="text-sm text-gray-600">
             {((marketData.total_volume / marketData.market_cap) * 100).toFixed(2)}% of Market Cap
@@ -211,11 +228,11 @@ const Analytics: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">All-Time High</span>
-              <span className="font-medium text-gray-900">${marketData.ath.toFixed(6)}</span>
+              <span className="font-medium text-gray-900">{currencySymbol}{convertAmount(marketData.ath).toFixed(6)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">All-Time Low</span>
-              <span className="font-medium text-gray-900">${marketData.atl.toFixed(6)}</span>
+              <span className="font-medium text-gray-900">{currencySymbol}{convertAmount(marketData.atl).toFixed(6)}</span>
             </div>
           </div>
         </div>

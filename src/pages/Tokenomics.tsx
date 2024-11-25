@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PieChart, BarChart2, Coins, TrendingUp } from 'lucide-react';
+import CurrencyToggle from '../components/common/CurrencyToggle';
+import { useExchangeRate } from '../hooks/useExchangesRate';
+import type { Currency } from '../types/common';
 
 const MetricCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({ title, value, icon }) => (
   <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -37,13 +40,29 @@ const Exchange: React.FC<{ name: string; logo: string; pair: string; volume: str
   );
 
 function Tokenomics() {
+  const [currency, setCurrency] = useState<Currency>('USD');
+  const { eurRate } = useExchangeRate();
+
+  const convertAmount = (amount: number) => {
+    return currency === 'EUR' ? amount * eurRate : amount;
+  };
+
+  const currencySymbol = currency === 'USD' ? '$' : '€';
+  const marketCap = convertAmount(76123291);
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">UOS Token Economics</h1>
-        <p className="text-lg text-gray-600">
-          Comprehensive overview of Ultra's token distribution, utility, and economic model.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">UOS Token Economics</h1>
+          <p className="text-lg text-gray-600">
+            Comprehensive overview of Ultra's token distribution, utility, and economic model.
+          </p>
+        </div>
+        <CurrencyToggle
+          currency={currency}
+          onCurrencyChange={setCurrency}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -59,7 +78,7 @@ function Tokenomics() {
         />
         <MetricCard
           title="Market Cap"
-          value="$76,123,291"
+          value={`${currencySymbol}${marketCap.toLocaleString()}`}
           icon={<BarChart2 className="h-6 w-6" />}
         />
         <MetricCard
@@ -77,32 +96,32 @@ function Tokenomics() {
               name="Gate.io"
               logo="https://assets.coingecko.com/markets/images/60/small/gate_io_logo1.jpg"
               pair="UOS/USDT"
-              volume="$523,891"
-              price="$0.249843"
+              volume={`${currencySymbol}${convertAmount(523891).toLocaleString()}`}
+              price={`${currencySymbol}${convertAmount(0.249843).toFixed(6)}`}
               status="active"
             />
             <Exchange
               name="MEXC Global"
               logo="https://assets.coingecko.com/markets/images/405/small/mexc.jpg"
               pair="UOS/USDT"
-              volume="$421,567"
-              price="$0.249721"
+              volume={`${currencySymbol}${convertAmount(421567).toLocaleString()}`}
+              price={`${currencySymbol}${convertAmount(0.249721).toFixed(6)}`}
               status="active"
             />
             <Exchange
               name="Huobi"
               logo="https://assets.coingecko.com/markets/images/25/small/logo_V_colour.png"
               pair="UOS/USDT"
-              volume="$312,445"
-              price="$0.249902"
+              volume={`${currencySymbol}${convertAmount(312445).toLocaleString()}`}
+              price={`${currencySymbol}${convertAmount(0.249902).toFixed(6)}`}
               status="active"
             />
             <Exchange
               name="KuCoin"
               logo="https://assets.coingecko.com/markets/images/61/small/kucoin.png"
               pair="UOS/USDT"
-              volume="$298,756"
-              price="$0.249834"
+              volume={`${currencySymbol}${convertAmount(298756).toLocaleString()}`}
+              price={`${currencySymbol}${convertAmount(0.249834).toFixed(6)}`}
               status="active"
             />
           </div>

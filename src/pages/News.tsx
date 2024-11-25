@@ -5,9 +5,11 @@ import ArticleCard from '../components/pages/news/ArticleCard';
 import LoadMoreButton from '../components/common/LoadMoreButton';
 import { useNewsStore } from '../store/newsStore';
 import { useRouterStore } from '../store/routerStore';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const News: React.FC = () => {
   const { currentRoute } = useRouterStore();
+  const { language: contextLanguage } = useLanguage();
   const loadingRef = useRef(false);
   
   const {
@@ -34,6 +36,19 @@ const News: React.FC = () => {
   const categories = currentCache?.categories || [];
   const hasMore = currentCache?.hasMore ?? true;
 
+  // Synchronize with context language on mount and language changes
+  useEffect(() => {
+    if (contextLanguage !== currentLanguage) {
+      setCurrentLanguage(contextLanguage);
+      if (!cache[contextLanguage]?.articles) {
+        setLoading(true);
+        setPage(1);
+        loadingRef.current = false;
+        fetchArticles(1, true);
+      }
+    }
+  }, [contextLanguage, currentLanguage, cache]);
+
   const fetchArticles = useCallback(async (pageNum: number, isNewFetch: boolean = false) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
@@ -42,7 +57,7 @@ const News: React.FC = () => {
       const languageCode = currentLanguage === 'fr' ? 'fr-FR' : 'en-GB';
       
       let currentCategories = categories;
-      if (isNewFetch) {
+      if (isNewFetch || categories.length === 0) {
         const categoriesResponse = await axios.get('/api-ultra-times-categories', {
           headers: {
             'Content-Type': 'application/json'
@@ -94,26 +109,27 @@ const News: React.FC = () => {
       
       if (newLanguage !== currentLanguage) {
         setCurrentLanguage(newLanguage);
-        clearCache();
-        setLoading(true);
-        setPage(1);
-        loadingRef.current = false;
-        fetchArticles(1, true);
+        if (!cache[newLanguage]?.articles) {
+          setLoading(true);
+          setPage(1);
+          loadingRef.current = false;
+          fetchArticles(1, true);
+        }
       }
     };
 
     window.addEventListener('languageChange', handleLanguageChange);
     return () => window.removeEventListener('languageChange', handleLanguageChange);
-  }, [currentLanguage, setCurrentLanguage, clearCache, setLoading, setPage, fetchArticles]);
+  }, [currentLanguage, setCurrentLanguage, cache, setLoading, setPage, fetchArticles]);
 
   useEffect(() => {
-    if (currentRoute === 'news' && !hasInitialized) {
+    if (currentRoute === 'news' && !hasInitialized && !cache[currentLanguage]?.articles) {
       setHasInitialized(true);
       setLoading(true);
       loadingRef.current = false;
       fetchArticles(1, true);
     }
-  }, [currentRoute, hasInitialized, setHasInitialized, fetchArticles, setLoading]);
+  }, [currentRoute, hasInitialized, cache, currentLanguage, setHasInitialized, fetchArticles, setLoading]);
 
   useEffect(() => {
     if (page > 1 && hasMore && !loadingRef.current) {
@@ -177,7 +193,7 @@ const News: React.FC = () => {
         </div>
       ) : (
         <>
-          {articles.length === 0 ? (
+          {articles.length === 0 && !loading ? (
             <div className="text-center py-12">
               <p className="text-gray-600">No articles found.</p>
             </div>
